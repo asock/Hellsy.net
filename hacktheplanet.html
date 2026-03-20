@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="NODE-7734 — an unindexed node. you were not directed here.">
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:title" content="~*~ HACK THE PLANET ~*~">
+<meta property="og:description" content="node-7734 is online. the operators are watching.">
+<meta name="theme-color" content="#6b00c2">
+<title>~*~ HACK THE PLANET ~*~ node-7734.onion ~*~</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<!--
+  HACK THE PLANET v3.0.0
+  Skin: Geocities 1998 | Engine: 2026 | Chaos Level: REFINED MAXIMUM
+  ┌─ VISUAL ──────────────────────────────────────────────────┐
+  │  WebGL plasma shader background (GLSL)                    │
+  │  Canvas particle system (mouse-reactive)                  │
+  │  Custom cursor with physics trail                         │
+  │  CSS @layer + @property typed animations                  │
+  │  Per-theme CSS variable injection                         │
+  └───────────────────────────────────────────────────────────┘
+  ┌─ INTERACTIVE ─────────────────────────────────────────────┐
+  │  Hacking minigame (Simon Says cipher variant)             │
+  │  Terminal Web Component + command history                 │
+  │  Click spark explosions                                   │
+  │  Konami code → ULTRA MODE                                 │
+  │  BSOD easter egg (random)                                 │
+  └───────────────────────────────────────────────────────────┘
+  ┌─ ARG / LORE ──────────────────────────────────────────────┐
+  │  NODE-7734 deep web narrative                             │
+  │  Encoded transmissions (Base64 cipher)                    │
+  │  Redacted documents                                       │
+  │  Hidden unlock chain across widgets                       │
+  └───────────────────────────────────────────────────────────┘
+  ┌─ FEATURES ────────────────────────────────────────────────┐
+  │  Retro music player (Web Audio synth)                     │
+  │  5 theme switcher (purple/green/red/amber/ice)            │
+  │  Hack progress bar (IndexedDB)                            │
+  │  Guestbook (IndexedDB)                                    │
+  │  Secret page (unlocks at visit 5)                         │
+  │  Retro rotating ads                                       │
+  │  Fake loading screen                                      │
+  └───────────────────────────────────────────────────────────┘
+-->
+<style>
+@layer reset, theme, layout, components, animations;
+
+@layer reset { *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } }
+
+@property --glow { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --hue-shift { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+
+@layer theme {
+  :root {
+    /* PURPLE (default) */
+    --c1: #6b00c2; --c2: #9b00ff; --c3: #c060ff; --c4: #e0aaff;
+    --acc: #ff00ff; --alt: #00ffff; --pos: #39ff14; --neg: #ff003c;
+    --gold: #ffd700; --bg: #06000d; --bg2: #0a0010; --text: #d4aaff;
+    --glow: 1; --hue-shift: 0deg;
+    --fm: 'Share Tech Mono', monospace;
+    --fv: 'VT323', monospace;
+    --fo: 'Orbitron', monospace;
+  }
+  :root[data-theme="green"] {
+    --c1:#006b22;--c2:#00c240;--c3:#39ff14;--c4:#aaffbb;
+    --acc:#00ff88;--alt:#ffff00;--bg:#000d03;--bg2:#001008;--text:#aaffcc;--hue-shift:120deg;
+  }
+  :root[data-theme="red"] {
+    --c1:#8b0000;--c2:#cc0000;--c3:#ff3333;--c4:#ffaaaa;
+    --acc:#ff6600;--alt:#ffcc00;--bg:#0d0000;--bg2:#1a0000;--text:#ffcccc;--hue-shift:330deg;
+  }
+  :root[data-theme="amber"] {
+    --c1:#7a3800;--c2:#c25a00;--c3:#ff8c00;--c4:#ffd0aa;
+    --acc:#ffd700;--alt:#ff4400;--bg:#0d0600;--bg2:#1a0a00;--text:#ffd4aa;--hue-shift:30deg;
+  }
+  :root[data-theme="ice"] {
+    --c1:#004466;--c2:#0077aa;--c3:#00ccff;--c4:#aaeeff;
+    --acc:#ffffff;--alt:#88ffff;--bg:#000810;--bg2:#000d18;--text:#ccf0ff;--hue-shift:200deg;
+  }
+  :root.konami { --c1:#00c26b;--c2:#00ff9b;--c3:#60ffcc;--c4:#aaffd4;--acc:#00ffff;--glow:3; }
+}
+
+@layer layout {
+  body { background:var(--bg); color:var(--text); font-family:var(--fm); overflow-x:hidden; cursor:none; transition:background 0.6s, color 0.6s; }
+  .wrap { position:relative; z-index:10; max-width:980px; margin:0 auto; padding:10px; }
+  .grid { display:grid; grid-template-columns:185px 1fr 185px; gap:8px; }
+  .col { display:flex; flex-direction:column; gap:8px; }
+  @media(max-width:720px){ .grid{grid-template-columns:1fr} .col{display:none} }
+}
+
+@layer components {
+  /* ── CURSOR ── */
+  #cur { position:fixed;pointer-events:none;z-index:9999;width:18px;height:18px;border:2px solid var(--c3);transform:translate(-50%,-50%);transition:transform 0.04s,border-color 0.3s;mix-blend-mode:screen; }
+  #cur::after { content:'';position:absolute;inset:4px;background:var(--c2);opacity:.35; }
+  .ctrail { position:fixed;pointer-events:none;z-index:9998;border-radius:50%;transform:translate(-50%,-50%);mix-blend-mode:screen;background:var(--c2); }
+
+  /* ── BG LAYERS ── */
+  #glsl-canvas { position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.18;transition:opacity 0.6s; }
+  #particle-canvas { position:fixed;inset:0;z-index:2;pointer-events:none; }
+  #matrix-canvas { position:fixed;inset:0;z-index:1;opacity:0.06;pointer-events:none;filter:hue-rotate(var(--hue-shift)); }
+  body::after { content:'';position:fixed;inset:0;z-index:998;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px); }
+
+  /* ── PANELS ── */
+  .panel { border:2px solid var(--c1);border-style:ridge;background:linear-gradient(135deg,rgba(10,0,20,.96),rgba(20,0,40,.94));padding:8px;margin-bottom:8px;box-shadow:0 0 calc(14px*var(--glow)) color-mix(in srgb,var(--c1) 60%,transparent);opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s,border-color .3s,box-shadow .3s,background .6s; }
+  .panel.vis { opacity:1;transform:none; }
+  .panel:hover { border-color:var(--c3);box-shadow:0 0 calc(24px*var(--glow)) color-mix(in srgb,var(--c2) 70%,transparent); }
+  .pt { font-family:var(--fv);font-size:1.25rem;color:var(--c3);text-shadow:0 0 8px var(--c2);border-bottom:1px dashed var(--c1);padding-bottom:3px;margin-bottom:6px;text-align:center; }
+
+  /* ── HEADER ── */
+  .hdr { text-align:center;border:3px solid var(--c2);border-style:groove;background:linear-gradient(180deg,color-mix(in srgb,var(--c1) 30%,#000) 0%,var(--bg) 100%);padding:14px;margin-bottom:10px; }
+  .hdr-title { font-family:var(--fo);font-size:clamp(1.6rem,4.5vw,3.2rem);font-weight:900;color:var(--c3);text-shadow:0 0 10px var(--acc),0 0 30px var(--c2),0 0 60px var(--c1); }
+  .blink { animation:blink .8s step-start infinite;color:var(--acc); }
+  .marquee-w { overflow:hidden;border-top:1px solid var(--c2);border-bottom:1px solid var(--c2);margin:7px 0;background:color-mix(in srgb,var(--c1) 15%,transparent);padding:3px 0; }
+  .marquee-i { display:inline-block;white-space:nowrap;animation:marq 22s linear infinite;color:var(--alt);font-size:.85rem;text-shadow:0 0 6px var(--alt); }
+  .badge-row { display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-top:7px; }
+  .badge { background:var(--c1);color:#fff;font-family:var(--fv);font-size:.8rem;padding:2px 5px;border:1px solid var(--c3);white-space:nowrap; }
+  .vis-count { font-family:var(--fv);font-size:1.3rem;color:var(--pos);text-shadow:0 0 8px var(--pos);margin-top:5px; }
+  #bc-ticker { font-family:var(--fv);font-size:.85rem;color:var(--acc);text-shadow:0 0 6px var(--acc);text-align:center;min-height:1.4em;padding:2px 0; }
+
+  /* ── NAV ── */
+  .nl { display:block;color:var(--alt);text-decoration:none;font-family:var(--fv);font-size:1.1rem;padding:3px 6px;border:1px solid transparent;transition:all .15s; }
+  .nl:hover { background:color-mix(in srgb,var(--alt) 12%,transparent);border-color:var(--alt);transform:translateX(4px); }
+  .nl::before { content:'> ';color:var(--c3); }
+
+  /* ── TERMINAL ── */
+  .term { background:#000;border:2px solid var(--pos);padding:10px;font-family:var(--fm);font-size:.82rem;color:var(--pos);text-shadow:0 0 5px var(--pos);box-shadow:0 0 18px color-mix(in srgb,var(--pos) 20%,transparent),inset 0 0 18px rgba(0,0,0,.9);min-height:190px;max-height:300px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--c2) transparent; }
+  .tl { margin:2px 0;line-height:1.4; }
+  .tp { color:var(--c3); }
+  .tcur { display:inline-block;width:8px;height:1em;background:var(--pos);animation:blink .7s step-start infinite;vertical-align:text-bottom; }
+  #ti-wrap { display:flex;align-items:center;margin-top:5px; }
+  #ti { background:transparent;border:none;outline:none;color:var(--pos);font-family:inherit;font-size:inherit;text-shadow:inherit;flex:1;caret-color:transparent; }
+
+  /* ── STATS ── */
+  .sg { display:grid;grid-template-columns:1fr 1fr;gap:5px; }
+  .sb { border:1px solid var(--c1);padding:6px;text-align:center;background:color-mix(in srgb,var(--c1) 12%,transparent);transition:all .3s; }
+  .sb:hover { background:color-mix(in srgb,var(--c1) 25%,transparent); }
+  .sv { font-family:var(--fo);font-size:1.2rem;color:var(--c3);text-shadow:0 0 10px var(--c2);transition:color .3s; }
+  .sl { font-size:.62rem;color:var(--text);opacity:.7; }
+  .pb-w { margin:4px 0; }
+  .pb-l { font-size:.68rem;color:var(--text);display:flex;justify-content:space-between; }
+  .pb { height:8px;background:color-mix(in srgb,var(--c1) 20%,transparent);border:1px solid var(--c1);margin-top:2px;overflow:hidden; }
+  .pf { height:100%;background:linear-gradient(90deg,var(--c1),var(--c3));box-shadow:0 0 6px var(--c2);transition:width .8s cubic-bezier(.4,0,.2,1); }
+
+  /* ── GUESTBOOK ── */
+  .ge { border-bottom:1px dotted var(--c1);padding:6px 0;font-size:.8rem; }
+  .gn { color:var(--acc);font-family:var(--fv);font-size:1.1rem; }
+  .gd { color:var(--c3);font-size:.62rem; }
+  .gf input,.gf textarea { width:100%;background:color-mix(in srgb,var(--c1) 8%,#000);border:1px solid var(--c1);color:var(--text);font-family:var(--fm);font-size:.8rem;padding:4px;margin:3px 0;outline:none;transition:border-color .2s,box-shadow .2s; }
+  .gf input:focus,.gf textarea:focus { border-color:var(--c3);box-shadow:0 0 8px var(--c2); }
+  .gf textarea { height:55px;resize:vertical; }
+
+  /* ── BUTTONS ── */
+  .btn { background:linear-gradient(90deg,var(--c1),var(--c2));border:1px solid var(--c3);color:#fff;font-family:var(--fv);font-size:1.05rem;padding:4px 12px;cursor:none;transition:all .2s;text-shadow:0 0 4px rgba(255,255,255,.4); }
+  .btn:hover { background:linear-gradient(90deg,var(--c2),var(--c3));box-shadow:0 0 14px var(--c2);transform:scale(1.04); }
+  .btn:active { transform:scale(.97); }
+
+  /* ── MUSIC PLAYER ── */
+  .player { display:flex;flex-direction:column;gap:6px; }
+  .track-name { font-family:var(--fv);font-size:1.1rem;color:var(--c3);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .player-controls { display:flex;gap:4px;justify-content:center; }
+  .pc-btn { background:transparent;border:1px solid var(--c1);color:var(--c3);font-family:var(--fv);font-size:1rem;padding:2px 8px;cursor:none;transition:all .15s; }
+  .pc-btn:hover { border-color:var(--c3);color:var(--acc);background:color-mix(in srgb,var(--c1) 20%,transparent); }
+  .player-bar { height:4px;background:color-mix(in srgb,var(--c1) 20%,transparent);border:1px solid var(--c1);position:relative;cursor:none;margin-top:2px; }
+  .player-fill { height:100%;background:linear-gradient(90deg,var(--c1),var(--c3));transition:width .5s linear; }
+  .viz-bars { display:flex;align-items:flex-end;gap:2px;height:40px;justify-content:center;margin-top:4px; }
+  .vb { flex:1;max-width:10px;background:linear-gradient(180deg,var(--c3),var(--c1));box-shadow:0 0 5px var(--c2);min-height:3px; }
+
+  /* ── THEME SWITCHER ── */
+  .theme-dots { display:flex;gap:6px;justify-content:center;padding:4px 0; }
+  .tdot { width:18px;height:18px;border-radius:50%;cursor:none;border:2px solid transparent;transition:all .2s;flex-shrink:0; }
+  .tdot:hover,.tdot.active { border-color:#fff;transform:scale(1.3);box-shadow:0 0 10px currentColor; }
+
+  /* ── MINIGAME ── */
+  #mg-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0; }
+  .mg-cell { aspect-ratio:1;border:2px solid var(--c1);background:color-mix(in srgb,var(--c1) 15%,transparent);cursor:none;font-family:var(--fo);font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .15s;user-select:none; }
+  .mg-cell:hover { border-color:var(--c3); }
+  .mg-cell.lit { background:var(--c2);border-color:var(--c3);box-shadow:0 0 15px var(--c2); }
+  .mg-cell.wrong { background:var(--neg);border-color:var(--neg);animation:shake .3s; }
+  .mg-cell.right { background:var(--pos);border-color:var(--pos);box-shadow:0 0 15px var(--pos); }
+  #mg-status { font-family:var(--fv);font-size:1.1rem;text-align:center;color:var(--c3);min-height:1.4em; }
+
+  /* ── ARG LORE ── */
+  .lore-block { font-family:var(--fm);font-size:.75rem;line-height:1.8;color:var(--text);background:rgba(0,0,0,.4);border:1px solid var(--c1);padding:8px;border-left:3px solid var(--c3); }
+  .redacted { background:var(--text);color:transparent;border-radius:2px;cursor:none;transition:background .3s,color .3s; }
+  .redacted:hover { background:var(--neg);color:var(--neg); }
+  .lore-sig { font-family:var(--fv);font-size:1rem;color:var(--acc);text-align:right;margin-top:6px; }
+  .cipher { font-family:var(--fm);font-size:.68rem;color:var(--alt);word-break:break-all;opacity:.8;cursor:none; }
+  .cipher:hover { opacity:1;color:var(--acc); }
+  #arg-decode-output { font-family:var(--fm);font-size:.72rem;color:var(--pos);min-height:1.2em;margin-top:4px;word-break:break-all; }
+
+  /* ── MISC ── */
+  .ndiv { text-align:center;color:var(--c3);font-family:var(--fv);font-size:1rem;letter-spacing:3px;text-shadow:0 0 8px var(--c2);margin:4px 0; }
+  .alert-box { border:2px solid var(--neg);background:color-mix(in srgb,var(--neg) 6%,transparent);padding:8px;text-align:center;font-family:var(--fv);font-size:1.05rem;color:var(--neg);text-shadow:0 0 8px var(--neg); }
+  .skull { font-size:2.2rem;text-align:center;display:inline-block;filter:drop-shadow(0 0 10px var(--c2)); }
+  .rainbow { background:linear-gradient(90deg,var(--neg),var(--gold),var(--pos),var(--alt),var(--c3),var(--acc));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-family:var(--fv);font-size:1.1rem;animation:rainbowS 3s linear infinite;background-size:200%; }
+  .uc { display:flex;align-items:center;gap:6px;font-family:var(--fv);font-size:1.1rem;color:var(--gold);justify-content:center; }
+  .ucstr { height:10px;flex:1;background:repeating-linear-gradient(45deg,var(--gold),var(--gold) 5px,#000 5px,#000 10px);opacity:.7; }
+  .gt { position:relative;color:var(--c3);font-family:var(--fo); }
+  .gt::before { content:attr(data-text);position:absolute;top:0;left:0;color:var(--alt);animation:gA 3s infinite;clip-path:polygon(0 0,100% 0,100% 35%,0 35%); }
+  .gt::after  { content:attr(data-text);position:absolute;top:0;left:0;color:var(--acc);animation:gB 3s infinite;clip-path:polygon(0 65%,100% 65%,100% 100%,0 100%); }
+
+  /* ── HACK PROGRESS ── */
+  .ghb { height:14px;background:color-mix(in srgb,var(--c1) 20%,transparent);border:1px solid var(--c1);overflow:hidden;margin-top:4px; }
+  .ghf { height:100%;background:linear-gradient(90deg,var(--c1),var(--c2),var(--c3));box-shadow:0 0 8px var(--c2);transition:width 1s ease;position:relative; }
+  .ghf::after { content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 8px,rgba(255,255,255,.06) 8px,rgba(255,255,255,.06) 16px);animation:hscan 2s linear infinite; }
+
+  /* ── RETRO ADS ── */
+  .rad { border:3px solid;border-style:outset;padding:8px;text-align:center;font-family:var(--fv);cursor:none;position:relative;overflow:hidden;margin-bottom:8px;font-size:.8rem; }
+  .rad::before { content:'AD';position:absolute;top:2px;left:4px;font-size:.5rem;opacity:.4;font-family:var(--fm);letter-spacing:2px; }
+
+  /* ── LOADER ── */
+  #loader { position:fixed;inset:0;z-index:99999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--fm);color:var(--pos);text-shadow:0 0 8px var(--pos);transition:opacity .6s; }
+  #loader.fade { opacity:0;pointer-events:none; }
+  .ll { font-family:var(--fo);font-size:clamp(1.4rem,3.5vw,2.6rem);color:var(--c3);text-shadow:0 0 20px var(--c2);margin-bottom:18px; }
+  .lbw { width:min(380px,80vw);height:10px;border:1px solid var(--pos);background:#000;margin:8px 0; }
+  .lbf { height:100%;background:linear-gradient(90deg,var(--c1),var(--pos));box-shadow:0 0 6px var(--pos);width:0%;transition:width .08s; }
+  .lline { font-size:.72rem;margin:2px 0;opacity:.8;min-height:1.1em; }
+  .lpct { font-family:var(--fo);font-size:1.3rem;margin-top:5px; }
+
+  /* ── BSOD ── */
+  #bsod { position:fixed;inset:0;z-index:99998;background:#0000aa;display:none;flex-direction:column;align-items:center;justify-content:center;font-family:var(--fm);text-align:center;padding:40px;cursor:none; }
+  #bsod.show { display:flex; }
+  #bsod h2 { background:#fff;color:#0000aa;padding:3px 12px;font-size:clamp(1.1rem,2.5vw,1.8rem);margin-bottom:18px; }
+  #bsod p,.bsod-code,.bsod-dis { color:#fff; }
+  #bsod p { font-size:.82rem;line-height:2;max-width:580px; }
+  .bsod-code { font-size:.72rem;opacity:.7;margin-top:18px; }
+  .bsod-dis { margin-top:28px;font-size:.88rem;animation:blink 1s step-start infinite; }
+
+  /* ── SECRET ── */
+  #secret { position:fixed;inset:0;z-index:99997;background:radial-gradient(ellipse at center,#0a0020 0%,#000 100%);display:none;flex-direction:column;align-items:center;justify-content:center;font-family:var(--fm);text-align:center;padding:20px;overflow-y:auto; }
+  #secret.show { display:flex; }
+  #secret h2 { font-family:var(--fo);font-size:clamp(1.4rem,3.5vw,2.8rem);color:var(--c3);text-shadow:0 0 28px var(--c2);margin-bottom:16px;animation:tG 2s infinite; }
+  .sg3 { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0;max-width:380px; }
+  .ss { border:1px solid var(--c2);padding:8px;background:color-mix(in srgb,var(--c1) 15%,transparent); }
+  .ssv { font-family:var(--fo);font-size:1.1rem;color:var(--c3); }
+  .ssl { font-size:.62rem;color:var(--c4); }
+
+  /* ── POPUP ── */
+  #popup { position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);z-index:9999;background:linear-gradient(135deg,#1a0035,#0a0015);border:3px solid var(--c2);border-style:outset;padding:20px 28px;text-align:center;box-shadow:0 0 50px var(--c1);min-width:290px;transition:transform .3s cubic-bezier(.34,1.56,.64,1); }
+  #popup.open { transform:translate(-50%,-50%) scale(1); }
+  #popup h3 { font-family:var(--fv);font-size:1.7rem;color:var(--acc);margin-bottom:8px; }
+  #popup p { font-size:.78rem;margin-bottom:14px;line-height:1.8; }
+  #poverlay { position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.72);display:none; }
+  #poverlay.open { display:block; }
+
+  /* ── KONAMI ── */
+  #kov { position:fixed;inset:0;z-index:9997;pointer-events:none;opacity:0;transition:opacity .4s;display:flex;align-items:center;justify-content:center;background:rgba(0,255,150,.03); }
+  #kov.on { opacity:1; }
+  .km { font-family:var(--fo);font-size:clamp(1.1rem,2.8vw,2.3rem);color:var(--pos);text-shadow:0 0 28px var(--pos);text-align:center;animation:kpop .5s ease-out; }
+
+  /* ── SPARK ── */
+  .spark { position:fixed;pointer-events:none;z-index:9996;border-radius:50%;transform:translate(-50%,-50%); }
+
+  /* ── FOOTER ── */
+  .foot { text-align:center;padding:10px;border-top:2px solid var(--c1);border-style:groove;font-family:var(--fv);font-size:.95rem;color:var(--c3);background:linear-gradient(0deg,color-mix(in srgb,var(--c1) 15%,transparent),transparent);margin-top:10px; }
+  .foot a { color:var(--alt);text-decoration:none; }
+  .hash-d { font-family:var(--fm);font-size:.6rem;color:var(--c3);word-break:break-all;opacity:.8;line-height:1.5; }
+}
+
+@layer animations {
+  @keyframes blink { 50%{opacity:0} }
+  @keyframes marq { from{transform:translateX(100vw)} to{transform:translateX(-100%)} }
+  @keyframes rainbowS { from{background-position:0%} to{background-position:200%} }
+  @keyframes gA { 0%,90%,100%{transform:none;opacity:0} 91%{transform:translateX(-3px);opacity:.8} 92%{transform:translateX(3px);opacity:0} }
+  @keyframes gB { 0%,93%,100%{transform:none;opacity:0} 94%{transform:translateX(3px);opacity:.8} 95%{transform:none;opacity:0} }
+  @keyframes hdrP { 0%,100%{box-shadow:0 0 calc(28px*var(--glow)) var(--c1),inset 0 0 18px color-mix(in srgb,var(--c1) 20%,transparent)} 50%{box-shadow:0 0 calc(55px*var(--glow)) var(--c2),inset 0 0 35px color-mix(in srgb,var(--c2) 28%,transparent)} }
+  @keyframes tG { 0%,90%,100%{transform:none;filter:none} 91%{transform:skewX(-4deg) translateX(-3px);filter:hue-rotate(25deg)} 92%{transform:skewX(3deg) translateX(3px);filter:hue-rotate(-25deg)} 93%{transform:none;filter:none} 94%{transform:skewX(-1deg);color:var(--alt)} 95%{transform:none;color:var(--c3)} }
+  @keyframes vizD { from{height:var(--mnh,10%)} to{height:var(--mxh,90%)} }
+  @keyframes kpop { from{transform:scale(3);opacity:0} to{transform:scale(1);opacity:1} }
+  @keyframes shake { 0%,100%{transform:none} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+  @keyframes hscan { from{background-position:0 0} to{background-position:32px 0} }
+  @keyframes pGlitch { 0%,95%,100%{transform:none;filter:none} 95.5%{transform:skewX(-.8deg) translateX(-2px);filter:hue-rotate(18deg) brightness(1.2)} 96%{transform:skewX(.8deg) translateX(2px);filter:hue-rotate(-18deg)} 96.5%{transform:none;filter:none} 97%{transform:translateX(-1px);filter:brightness(1.4)} 97.5%{transform:none;filter:none} }
+  .hdr { animation:hdrP 3s ease-in-out infinite; }
+  .hdr-title { animation:tG 4.5s infinite; }
+  .pg { animation:pGlitch 9s infinite; }
+}
+
+@view-transition { navigation:auto; }
+::view-transition-old(root) { animation:.15s ease-in vto; }
+::view-transition-new(root) { animation:.15s ease-out vti; }
+@keyframes vto { to{opacity:0;filter:hue-rotate(90deg) blur(2px)} }
+@keyframes vti { from{opacity:0;filter:hue-rotate(-90deg) blur(2px)} }
+
+/* ── REDUCED MOTION — respect the user ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.1s !important; }
+  #glsl-canvas, #particle-canvas, #matrix-canvas { display: none; }
+  .hdr { animation: none; }
+  .hdr-title { animation: none; }
+}
+
+/* ── MATRIX ARG ── */
+#matrix-interrupt { position:fixed;inset:0;z-index:99996;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;font-family:var(--fm);color:var(--pos);text-shadow:0 0 8px var(--pos);cursor:none;overflow:hidden; }
+#matrix-interrupt.show { display:flex; }
+#matrix-interrupt canvas { position:absolute;inset:0;z-index:0; }
+.mi-content { position:relative;z-index:1;text-align:center;max-width:520px;padding:20px; }
+.mi-content p { font-size:.85rem;line-height:2.4;margin-bottom:16px;color:var(--pos); }
+.mi-big { font-family:var(--fo);font-size:clamp(1.4rem,3.5vw,2.5rem);color:var(--pos);text-shadow:0 0 30px var(--pos);margin-bottom:20px; }
+@keyframes phoneRing { 0%,100%{transform:rotate(0)} 10%{transform:rotate(-10deg)} 30%{transform:rotate(10deg)} 50%{transform:rotate(-7deg)} 70%{transform:rotate(7deg)} 90%{transform:rotate(0)} }
+.ringing { animation:phoneRing .45s infinite;display:inline-block; }
+</style>
+</head>
+<body>
+
+<!-- MATRIX INTERRUPT OVERLAY -->
+<div id="matrix-interrupt">
+  <canvas id="mi-canvas"></canvas>
+  <div class="mi-content">
+    <div class="mi-big" id="mi-headline">wake up, neo.</div>
+    <p id="mi-body">the matrix has you.<br>follow the white rabbit.</p>
+    <button class="btn" id="mi-close">[ I'M AWAKE ]</button>
+  </div>
+</div>
+
+<!-- LAYERS -->
+<canvas id="glsl-canvas"></canvas>
+<canvas id="matrix-canvas"></canvas>
+<canvas id="particle-canvas"></canvas>
+<div id="cur"></div>
+<div id="kov"><div class="km">⬆⬆⬇⬇⬅➡⬅➡ B A<br>ULTRA MODE 💚</div></div>
+<div id="poverlay" aria-hidden="true"></div>
+
+<!-- LOADER -->
+<div id="loader" role="status" aria-live="polite">
+  <div class="ll">~*~ HACK THE PLANET ~*~</div>
+  <div class="lline" id="lline">initializing...</div>
+  <div class="lbw"><div class="lbf" id="lfill"></div></div>
+  <div class="lpct" id="lpct">0%</div>
+</div>
+
+<!-- BSOD -->
+<div id="bsod" role="alertdialog" aria-modal="true" aria-labelledby="bsod-title">
+  <h2 id="bsod-title">HACK_THE_PLANET_EXCEPTION</h2>
+  <p>If this is the first time you've seen this Stop error screen, restart your computer. If this screen appears again, follow these steps:<br><br>
+  Check to make sure you have taken your adderall.<br>Ensure mainframe access has not been revoked.<br>Verify hacker credentials are valid.</p>
+  <div class="bsod-code">*** STOP: 0x0000H4X0R (0xDEADBEEF, 0xC0FFEE00, 0x13370000, 0xFFFFFFFF)<br>hacktheplanet.sys — Address FFFFFF98 base at 00000000</div>
+  <div class="bsod-dis">Press any key to continue_</div>
+</div>
+
+<!-- SECRET PAGE -->
+<div id="secret" role="dialog" aria-modal="true" aria-label="Classified documents">
+  <h2>⚠ NODE-7734 CLASSIFIED ⚠</h2>
+  <p style="color:var(--text);line-height:2;max-width:480px;">
+    you have accessed the inner sanctum.<br>
+    <span style="color:var(--acc);font-family:var(--fv);font-size:1.2rem;">your loyalty has been noted.</span><br>
+    the following data has been compiled on your activities.
+  </p>
+  <div class="sg3" id="sec-grid"></div>
+  <div class="lore-block" style="max-width:480px;margin-top:10px;">
+    <span style="color:var(--acc);">TRANSMISSION FROM NODE-0001:</span><br>
+    the network grows. every visit strengthens the grid.<br>
+    you are now a <span style="color:var(--pos);">TRUSTED OPERATOR</span>.<br>
+    do not speak of this to anyone. especially not to <span class="redacted">████████████</span>.
+  </div>
+  <button class="btn" id="sec-close" style="margin-top:18px;">[ CLOSE CLASSIFIED DOCS ]</button>
+</div>
+
+<!-- ENTRY POPUP -->
+<div id="popup" role="dialog" aria-modal="true" aria-labelledby="popup-heading">
+  <h3 id="popup-heading">⚠ INTRUSION DETECTED ⚠</h3>
+  <p>WELCOME, OPERATOR.<br>
+  SESSION SIG:<br>
+  <span class="hash-d" id="popup-hash">generating...</span><br>
+  NODE-7734 IS ONLINE.</p>
+  <button class="btn" id="enter-btn">[ ENTER THE GRID ]</button>
+</div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header class="hdr">
+    <div class="marquee-w">
+      <div class="marquee-i">
+        ★彡 WELCOME TO NODE-7734 — CLASSIFIED UPLINK 彡★ &nbsp;&nbsp;
+        THIS PAGE IS NOT INDEXED. YOU WERE NOT DIRECTED HERE. &nbsp;&nbsp;
+        ~*~ HACK THE PLANET ~*~ &nbsp;&nbsp;
+        KONAMI: ↑↑↓↓←→←→BA &nbsp;&nbsp;
+        UNDER CONSTRUCTION SINCE 1998, COMPLETED NEVER &nbsp;&nbsp;
+        DO NOT SHARE THIS URL &nbsp;&nbsp;
+        MADE WITH 🌿 WEED &amp; ADDERALL &nbsp;&nbsp;
+      </div>
+    </div>
+    <div class="hdr-title">~*~ HACK THE PLANET ~*~</div>
+    <div style="font-family:var(--fv);font-size:1.05rem;color:var(--c4);margin:4px 0;">
+      <span class="blink">★</span>
+      <span class="gt" data-text="NODE-7734 // ONLINE">NODE-7734 // ONLINE</span>
+      <span class="blink">★</span>
+    </div>
+    <div class="vis-count">👁 OPERATOR #<span id="visit-count">0</span></div>
+    <div id="bc-ticker"></div>
+    <div class="badge-row">
+      <span class="badge" style="background:#00008b;">NETSCAPE NOW</span>
+      <span class="badge" style="background:#4b0082;">PURPLE PRIDE</span>
+      <span class="badge" style="background:#006400;">HACKER</span>
+      <span class="badge" style="background:#8b0000;">ANARCHY</span>
+      <span class="badge" style="background:#333;">ARCH BTW</span>
+      <span class="badge">NO COOKIES*</span>
+      <span class="badge" style="background:#1a0035;">Y2K SURVIVOR</span>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- LEFT -->
+    <div class="col" id="col-left">
+      <div class="panel">
+        <div class="pt">[ LINKS ]</div>
+        <nav>
+          <a class="nl" href="#terminal">Terminal</a>
+          <a class="nl" href="#dashboard">Dashboard</a>
+          <a class="nl" href="#minigame">Minigame</a>
+          <a class="nl" href="#arg">Transmissions</a>
+          <a class="nl" href="#matrix-arg">The Matrix</a>
+          <a class="nl" href="#guestbook">Guestbook</a>
+        </nav>
+      </div>
+
+      <div class="panel">
+        <div class="pt">[ STATUS ]</div>
+        <div style="font-size:.73rem;color:var(--pos);text-shadow:0 0 5px var(--pos);line-height:2.2;">
+          ● ONLINE<br>● MEDICATED<br>● HACKING<br>
+          <span style="color:var(--neg);">● BEING WATCHED</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pt">[ MOOD ]</div>
+        <div style="text-align:center;font-size:2rem;" id="mood-emoji">😈</div>
+        <div style="font-family:var(--fv);text-align:center;color:var(--c3);" id="mood-lbl">chaotic neutral</div>
+      </div>
+
+      <!-- MUSIC PLAYER -->
+      <div class="panel">
+        <div class="pt">[ PLAYER ]</div>
+        <div class="player">
+          <div class="track-name" id="track-name">◈ darksynth_001.xm</div>
+          <div class="player-controls">
+            <button class="pc-btn" id="p-prev">⏮</button>
+            <button class="pc-btn" id="p-play">▶</button>
+            <button class="pc-btn" id="p-next">⏭</button>
+          </div>
+          <div class="player-bar"><div class="player-fill" id="p-fill" style="width:0%"></div></div>
+          <div class="viz-bars" id="vizBars"></div>
+        </div>
+      </div>
+
+      <!-- HACK PROGRESS -->
+      <div class="panel pg">
+        <div class="pt">[ HACK PROGRESS ]</div>
+        <div style="font-size:.68rem;color:var(--text);display:flex;justify-content:space-between;"><span>GLOBAL PWNERSHIP</span><span id="hp-pct" style="color:var(--c3);">0%</span></div>
+        <div class="ghb"><div class="ghf" id="ghf" style="width:0%"></div></div>
+        <div style="font-size:.6rem;color:var(--c4);margin-top:3px;" id="hp-visits">visit 0 of 100</div>
+        <div style="font-size:.6rem;color:var(--gold);margin-top:2px;" id="hp-hint"></div>
+      </div>
+
+      <div class="panel">
+        <div class="pt">[ WEB RINGS ]</div>
+        <div style="font-size:.7rem;line-height:1.8;">
+          <a href="#" style="color:var(--alt);text-decoration:none;">◄ prev</a> &nbsp;|&nbsp;
+          <a href="#" style="color:var(--acc);text-decoration:none;">rnd</a> &nbsp;|&nbsp;
+          <a href="#" style="color:var(--alt);text-decoration:none;">next ►</a>
+          <div style="color:var(--c4);margin-top:2px;">HackerRing v2</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <main>
+      <div class="alert-box">
+        ⚠ YOU ARE ACCESSING AN UNLISTED NODE ⚠<br>
+        <span style="font-size:.68rem;color:var(--text);">this page does not exist. you are not here. *the no cookies badge remains aspirational.</span>
+      </div>
+      <div style="height:8px;"></div>
+
+      <div class="panel">
+        <div class="uc"><div class="ucstr"></div>🚧 PERPETUALLY UNDER CONSTRUCTION 🚧<div class="ucstr"></div></div>
+      </div>
+
+      <!-- TERMINAL -->
+      <div class="panel" id="terminal">
+        <div class="pt">[ /bin/hacktheplanet — SHELL v6.66 ]</div>
+        <hack-terminal></hack-terminal>
+        <div style="font-size:.62rem;color:var(--c4);margin-top:4px;text-align:right;">try: help, hack, lore, decode, matrix, neofetch, crypto, clear</div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div class="panel" id="dashboard">
+        <div class="pt">[ SYSTEM TELEMETRY ]</div>
+        <div class="sg">
+          <div class="sb"><div class="sv" id="sv-cpu">--</div><div class="sl">CPU HACKING LOAD</div></div>
+          <div class="sb"><div class="sv" id="sv-ram">--</div><div class="sl">RAM CONSUMED</div></div>
+          <div class="sb"><div class="sv" id="sv-net">--</div><div class="sl">PACKETS SNIFFED/s</div></div>
+          <div class="sb"><div class="sv" id="sv-up">--</div><div class="sl">UPTIME (DAYS)</div></div>
+        </div>
+        <div id="pbars" style="margin-top:8px;"></div>
+        <div style="margin-top:8px;">
+          <div style="font-family:var(--fv);font-size:.88rem;color:var(--c3);margin-bottom:3px;">LIVE NETWORK TOPOLOGY</div>
+          <canvas id="netmap" style="width:100%;height:110px;"></canvas>
+        </div>
+      </div>
+
+      <!-- ARG LORE -->
+      <div class="panel" id="arg">
+        <div class="pt">[ INTERCEPTED TRANSMISSIONS ]</div>
+        <div class="lore-block">
+          <span style="color:var(--acc);">// TRANSMISSION 001 — ORIGIN: UNKNOWN</span><br>
+          the grid was never meant to be found by <span class="redacted">█████████</span>.<br>
+          node-7734 has been active since <span class="redacted">████</span>. the operators know.<br>
+          if you are reading this, you have been <span style="color:var(--pos);">SELECTED</span>.<br>
+          the next node is at <span class="redacted">██████████████████████</span>.
+          <div class="lore-sig">— NODE-0001 // ENCRYPTED</div>
+        </div>
+        <div style="margin-top:8px;" class="lore-block">
+          <span style="color:var(--acc);">// TRANSMISSION 002 — ENCODED</span><br>
+          <span class="cipher" id="cipher-txt" title="click to decode">ENCODED: SGFjayB0aGUgcGxhbmV0LiBUaGUgbmV0d29yayBpcyByZWFsLiBZb3UgYXJlIG5vdCBhbG9uZS4gTm9kZS03NzM0IGlzIHdhdGNoaW5nLg==</span>
+          <div id="arg-decode-output"></div>
+          <button class="btn" id="arg-decode-btn" style="margin-top:6px;font-size:.8rem;padding:2px 10px;">[ DECODE ]</button>
+        </div>
+        <div style="margin-top:8px;" class="lore-block">
+          <span style="color:var(--acc);">// TRANSMISSION 003 — FRAGMENTED</span><br>
+          <span style="color:var(--text);">we built something in <span class="redacted">1998</span>. it was never shut down.<br>
+          the <span class="redacted">██████ PROJECT</span> continues. operators are embedded in<br>
+          <span class="redacted">███████</span>, <span class="redacted">██████████</span>, and <span class="redacted">███ ██████ ██████████</span>.<br>
+          your visit has been logged at coordinate <span style="color:var(--alt);" id="arg-coord">calculating...</span></span>
+          <div class="lore-sig">— NODE-7734 // SIGNED</div>
+        </div>
+      </div>
+
+      <!-- ARG LORE -->
+      <div class="panel" id="arg">
+        <div class="pt">[ INTERCEPTED TRANSMISSIONS ]</div>
+        <div class="lore-block">
+          <span style="color:var(--acc);">// TRANSMISSION 001 — ORIGIN: UNKNOWN</span><br>
+          the grid was never meant to be found by <span class="redacted">█████████</span>.<br>
+          node-7734 has been active since <span class="redacted">████</span>. the operators know.<br>
+          if you are reading this, you have been <span style="color:var(--pos);">SELECTED</span>.<br>
+          the next node is at <span class="redacted">██████████████████████</span>.
+          <div class="lore-sig">— NODE-0001 // ENCRYPTED</div>
+        </div>
+        <div style="margin-top:8px;" class="lore-block">
+          <span style="color:var(--acc);">// TRANSMISSION 002 — ENCODED</span><br>
+          <span class="cipher" id="cipher-txt" title="click to decode">ENCODED: SGFjayB0aGUgcGxhbmV0LiBUaGUgbmV0d29yayBpcyByZWFsLiBZb3UgYXJlIG5vdCBhbG9uZS4gTm9kZS03NzM0IGlzIHdhdGNoaW5nLg==</span>
+          <div id="arg-decode-output"></div>
+          <button class="btn" id="arg-decode-btn" style="margin-top:6px;font-size:.8rem;padding:2px 10px;">[ DECODE ]</button>
+        </div>
+        <div style="margin-top:8px;" class="lore-block">
+          <span style="color:var(--acc);">// TRANSMISSION 003 — FRAGMENTED</span><br>
+          <span style="color:var(--text);">we built something in <span class="redacted">1998</span>. it was never shut down.<br>
+          the <span class="redacted">██████ PROJECT</span> continues. operators are embedded in<br>
+          <span class="redacted">███████</span>, <span class="redacted">██████████</span>, and <span class="redacted">███ ██████ ██████████</span>.<br>
+          your visit has been logged at coordinate <span style="color:var(--alt);" id="arg-coord">calculating...</span></span>
+          <div class="lore-sig">— NODE-7734 // SIGNED</div>
+        </div>
+      </div>
+
+      <!-- MATRIX ARG -->
+      <div class="panel" id="matrix-arg">
+        <div class="pt">[ WHAT IS THE MATRIX? ]</div>
+
+        <!-- Wake up Neo terminal -->
+        <div class="lore-block" style="margin-bottom:8px;">
+          <div id="neo-terminal" style="font-family:var(--fm);font-size:.78rem;color:var(--pos);text-shadow:0 0 5px var(--pos);min-height:80px;line-height:1.9;"></div>
+          <button class="btn" id="neo-wake-btn" style="margin-top:6px;font-size:.8rem;padding:2px 10px;">[ WAKE UP ]</button>
+        </div>
+
+        <!-- Red pill / Blue pill -->
+        <div id="pill-section" style="text-align:center;padding:10px 0;display:none;">
+          <div style="font-family:var(--fv);font-size:1.1rem;color:var(--text);margin-bottom:10px;">
+            this is your last chance.<br>after this there is no going back.
+          </div>
+          <div style="display:flex;gap:16px;justify-content:center;">
+            <button class="btn" id="red-pill" style="background:linear-gradient(90deg,#8b0000,var(--neg));border-color:var(--neg);font-size:1rem;padding:6px 18px;">💊 RED PILL</button>
+            <button class="btn" id="blue-pill" style="background:linear-gradient(90deg,#00008b,#0077ff);border-color:#4499ff;font-size:1rem;padding:6px 18px;">💊 BLUE PILL</button>
+          </div>
+        </div>
+
+        <!-- Pill outcome -->
+        <div id="pill-outcome" style="display:none;" class="lore-block"></div>
+
+        <!-- Morse code puzzle -->
+        <div style="margin-top:8px;" class="lore-block">
+          <span style="color:var(--acc);">// SIGNAL INTERCEPT — MORSE ENCODED</span><br>
+          <div id="morse-display" style="font-family:var(--fm);font-size:.72rem;color:var(--alt);letter-spacing:3px;margin:6px 0;cursor:none;" title="decode this"></div>
+          <div style="font-size:.65rem;color:var(--c4);margin-bottom:5px;">can you decode the signal?</div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="morse-input" placeholder="enter decoded message..." style="flex:1;background:#000;border:1px solid var(--c1);color:var(--text);font-family:var(--fm);font-size:.75rem;padding:3px 6px;outline:none;" autocomplete="off"/>
+            <button class="btn" id="morse-submit" style="font-size:.85rem;padding:2px 8px;">[ CHECK ]</button>
+          </div>
+          <div id="morse-result" style="font-family:var(--fv);font-size:1rem;min-height:1.3em;margin-top:4px;"></div>
+        </div>
+
+        <!-- Binary hidden message -->
+        <div style="margin-top:8px;" class="lore-block">
+          <span style="color:var(--acc);">// BINARY FRAGMENT — SOURCE UNKNOWN</span><br>
+          <div id="binary-msg" style="font-family:var(--fm);font-size:.6rem;color:var(--c3);opacity:.6;word-break:break-all;line-height:1.8;cursor:none;" title="there is a message hidden here"></div>
+          <button class="btn" id="binary-decode-btn" style="margin-top:6px;font-size:.78rem;padding:2px 8px;">[ PARSE BINARY ]</button>
+          <div id="binary-output" style="font-family:var(--fv);font-size:1.05rem;color:var(--pos);min-height:1.3em;margin-top:4px;"></div>
+        </div>
+
+        <!-- The phone -->
+        <div style="margin-top:8px;" class="lore-block" id="phone-section">
+          <span style="color:var(--acc);">// INCOMING CALL — UNKNOWN NUMBER</span><br>
+          <div style="text-align:center;padding:8px 0;">
+            <div style="font-size:2rem;" id="phone-icon">📵</div>
+            <div style="font-family:var(--fv);font-size:1rem;color:var(--text);margin:4px 0;" id="phone-status">the phone is ringing.</div>
+            <button class="btn" id="phone-answer" style="font-size:.9rem;padding:3px 12px;">[ ANSWER ]</button>
+          </div>
+          <div id="phone-msg" style="font-family:var(--fm);font-size:.78rem;color:var(--pos);line-height:1.9;display:none;"></div>
+        </div>
+
+      </div>
+
+      <!-- MINIGAME -->
+      <div class="panel" id="minigame">
+        <div class="pt">[ CIPHER BREACH — MINIGAME ]</div>
+        <div id="mg-status">memorize the sequence to breach the firewall</div>
+        <div id="mg-grid"></div>
+        <div style="display:flex;gap:6px;justify-content:center;margin-top:4px;">
+          <button class="btn" id="mg-start">[ START BREACH ]</button>
+          <span style="font-family:var(--fv);font-size:1rem;color:var(--c3);align-self:center;">SCORE: <span id="mg-score">0</span></span>
+        </div>
+      </div>
+
+      <!-- ABOUT -->
+      <div class="panel" id="about">
+        <div class="pt">[ OPERATOR PROFILE ]</div>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;">
+          <div style="text-align:center;"><div class="skull">💀</div><div class="rainbow" style="display:block;">h4x0r</div></div>
+          <div style="font-size:.76rem;line-height:1.7;">
+            <strong style="color:var(--c3);">DESIGNATION:</strong> unknown<br>
+            <strong style="color:var(--c3);">NODE:</strong> 7734<br>
+            <strong style="color:var(--c3);">OS:</strong> Arch (btw)<br>
+            <strong style="color:var(--c3);">CLEARANCE:</strong> ██████<br>
+            <strong style="color:var(--c3);">SKILLS:</strong> vim, adderall, sudo<br>
+            <strong style="color:var(--c3);">STATUS:</strong> ACTIVE
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:.73rem;color:var(--c4);border-top:1px dotted var(--c1);padding-top:5px;">
+          <em>"Mess with the best, die like the rest."</em> — Dade, 1995<br>
+          <em>"The Matrix has you."</em> — Morpheus, 1999<br>
+          <em>"Hack the planet."</em> — NODE-7734, always
+        </div>
+      </div>
+
+      <!-- GUESTBOOK -->
+      <div class="panel" id="guestbook">
+        <div class="pt">[ OPERATOR LOG — SIGN OR DIE (jk) ]</div>
+        <div id="gb-entries"></div>
+        <div style="margin-top:8px;">
+          <div style="font-family:var(--fv);font-size:.95rem;color:var(--c3);margin-bottom:4px;">[ APPEND TO LOG ]</div>
+          <div class="gf">
+            <input type="text" id="gb-name" placeholder="operator handle / callsign" maxlength="30" autocomplete="off"/>
+            <textarea id="gb-msg" placeholder="transmission content..." maxlength="200"></textarea>
+            <button class="btn" id="gb-submit">[ TRANSMIT ]</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ndiv">— ✦ — ✦ — ✦ — ✦ — ✦ —</div>
+
+      <div class="panel">
+        <div class="pt">[ OPERATOR WISDOM ]</div>
+        <div id="wisdom-box" style="font-family:var(--fv);font-size:1.15rem;color:var(--alt);text-shadow:0 0 8px var(--alt);min-height:2.5rem;text-align:center;padding:8px;"></div>
+        <div style="text-align:center;margin-top:5px;"><button class="btn" id="wisdom-btn">[ GENERATE ]</button></div>
+      </div>
+    </main>
+
+    <!-- RIGHT -->
+    <div class="col" id="col-right">
+      <div class="panel">
+        <div class="pt">[ TIME ]</div>
+        <div id="clock" style="font-family:var(--fo);font-size:.88rem;color:var(--c3);text-shadow:0 0 8px var(--c2);text-align:center;"></div>
+        <div id="date-d" style="font-size:.62rem;color:var(--c4);text-align:center;margin-top:2px;"></div>
+      </div>
+
+      <!-- THEME SWITCHER -->
+      <div class="panel">
+        <div class="pt">[ THEME ]</div>
+        <div class="theme-dots" id="theme-dots">
+          <div class="tdot active" data-theme="default" style="background:#9b00ff;" title="PURPLE"></div>
+          <div class="tdot" data-theme="green" style="background:#39ff14;" title="GREEN"></div>
+          <div class="tdot" data-theme="red" style="background:#ff3333;" title="RED"></div>
+          <div class="tdot" data-theme="amber" style="background:#ff8c00;" title="AMBER"></div>
+          <div class="tdot" data-theme="ice" style="background:#00ccff;" title="ICE"></div>
+        </div>
+        <div style="font-family:var(--fv);font-size:.85rem;color:var(--c3);text-align:center;" id="theme-name">PURPLE</div>
+      </div>
+
+      <div class="panel">
+        <div class="pt">[ WEATHER ]</div>
+        <div style="text-align:center;font-size:1.6rem;">🌩️</div>
+        <div style="font-family:var(--fv);font-size:.95rem;text-align:center;color:var(--c3);">CYBERSPACE</div>
+        <div style="font-size:.68rem;text-align:center;color:var(--text);">TEMP: 6.66°C<br>WIND: MAXIMUM<br>VISIBILITY: 0%</div>
+      </div>
+
+      <div class="panel">
+        <div class="pt">[ POLL ]</div>
+        <div style="font-size:.72rem;margin-bottom:5px;">best hacker OS?</div>
+        <div id="poll-opts"></div>
+      </div>
+
+      <div class="panel">
+        <div class="pt">[ CRYPTO SIG ]</div>
+        <div id="sidebar-hash" class="hash-d"></div>
+        <button class="btn" id="new-sig" style="margin-top:4px;font-size:.72rem;padding:2px 8px;width:100%;">[ REGEN SIG ]</button>
+      </div>
+
+      <div class="panel">
+        <div class="pt">[ BEST VIEWED ]</div>
+        <div style="font-size:.68rem;color:var(--c4);line-height:1.9;text-align:center;">🦕 Netscape 4.0<br>🖥 800×600<br>🌑 In the dark<br>🌿 Medicated<br>🎧 Loud music<br>😈 Evil mindset</div>
+      </div>
+
+      <!-- RETRO ADS -->
+      <div id="retro-ads"></div>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <div class="ndiv">— ✦ —</div>
+    <div style="margin:5px 0;">★ NODE-7734 // ONLINE // <span style="color:var(--acc);">UNINDEXED</span> ★</div>
+    <div style="font-size:.68rem;color:var(--c4);">
+      © 1998-∞ node7734.onion &nbsp;|&nbsp;
+      <span style="color:var(--neg);">NO</span> rights reserved &nbsp;|&nbsp;
+      steal this html &nbsp;|&nbsp;
+      <a href="#" onclick="scrollTo({top:0,behavior:'smooth'});return false;">↑ top</a>
+    </div>
+    <div style="margin-top:5px;font-size:.82rem;">
+      <span class="blink">✦</span> made with 🌿 weed &amp; adderall <span class="blink">✦</span>
+    </div>
+    <div id="secret-link" style="display:none;margin-top:6px;"></div>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script type="module">
+'use strict';
+// ============================================================
+// HACK THE PLANET v3.0.0 — ENGINE
+// ============================================================
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const ri = (a,b)=>Math.floor(Math.random()*(b-a)+a);
+const rf = (a,b)=>Math.random()*(b-a)+a;
+const css = v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+// ── WEBGL PLASMA SHADER ──────────────────────────────────────
+(function initGLSL(){
+  const c = $('#glsl-canvas');
+  const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 p;void main(){gl_Position=vec4(p,0,1);}`;
+  const fs = `
+    precision mediump float;
+    uniform float t;
+    uniform vec2 res;
+    uniform float hue;
+    vec3 hsv(float h,float s,float v){
+      vec4 K=vec4(1.,2./3.,1./3.,3.);
+      vec3 p=abs(fract(vec3(h)+K.xyz)*6.-K.www);
+      return v*mix(K.xxx,clamp(p-K.xxx,0.,1.),s);
+    }
+    void main(){
+      vec2 uv=(gl_FragCoord.xy/res)*2.-1.;
+      uv.x*=res.x/res.y;
+      float v=sin(uv.x*3.+t*.4)*sin(uv.y*3.+t*.3)
+             +sin(length(uv)*5.-t*.7)*.5
+             +sin((uv.x+uv.y)*4.+t*.5)*.4
+             +sin(length(uv-vec2(sin(t*.2),cos(t*.15)))*6.)*.3;
+      v=v*.5+.5;
+      vec3 col=hsv(hue+v*.25,0.9,v*.6);
+      gl_FragColor=vec4(col,1.);
+    }`;
+  const compile=(type,src)=>{const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s;};
+  const prog=gl.createProgram();
+  gl.attachShader(prog,compile(gl.VERTEX_SHADER,vs));
+  gl.attachShader(prog,compile(gl.FRAGMENT_SHADER,fs));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(prog,'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  const tLoc=gl.getUniformLocation(prog,'t'), rLoc=gl.getUniformLocation(prog,'res'), hLoc=gl.getUniformLocation(prog,'hue');
+  let hue=0.75;
+  window._glslSetHue=h=>hue=h;
+  const resize=()=>{c.width=innerWidth;c.height=innerHeight;gl.viewport(0,0,c.width,c.height);};
+  new ResizeObserver(resize).observe(document.body);
+  resize();
+  let start=performance.now();
+  (function frame(){
+    const t=(performance.now()-start)/1000;
+    gl.uniform1f(tLoc,t); gl.uniform2f(rLoc,c.width,c.height); gl.uniform1f(hLoc,hue);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+    requestAnimationFrame(frame);
+  })();
+})();
+
+// ── MATRIX RAIN ──────────────────────────────────────────────
+(function(){
+  const c=$('#matrix-canvas'),ctx=c.getContext('2d');
+  const CH='ｦｧｨｩｪｫｬｭｮｯｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ01';
+  let cols,drops;
+  new ResizeObserver(()=>{c.width=innerWidth;c.height=innerHeight;cols=Math.floor(c.width/16);drops=Array(cols).fill(1);}).observe(document.body);
+  (function draw(){
+    ctx.fillStyle='rgba(6,0,13,.05)';ctx.fillRect(0,0,c.width,c.height);
+    ctx.font='14px "Share Tech Mono"';
+    drops?.forEach((y,i)=>{ctx.fillStyle=`hsl(${270+Math.random()*40},100%,65%)`;ctx.fillText(CH[ri(0,CH.length)],i*16,y*16);if(y*16>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;});
+    requestAnimationFrame(draw);
+  })();
+})();
+
+// ── PARTICLE SYSTEM (mouse-reactive) ─────────────────────────
+(function(){
+  const c=$('#particle-canvas'),ctx=c.getContext('2d');
+  new ResizeObserver(()=>{c.width=innerWidth;c.height=innerHeight;}).observe(document.body);
+  let mx=innerWidth/2,my=innerHeight/2;
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+  const particles=Array.from({length:60},()=>({
+    x:rf(0,innerWidth),y:rf(0,innerHeight),
+    vx:rf(-.3,.3),vy:rf(-.3,.3),
+    r:rf(.5,2.5),life:rf(.4,1),decay:rf(.001,.004)
+  }));
+  (function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    const col=css('--c2')||'#9b00ff';
+    particles.forEach(p=>{
+      const dx=mx-p.x,dy=my-p.y,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<180){p.vx+=dx/dist*.02;p.vy+=dy/dist*.02;}
+      p.vx*=.98;p.vy*=.98;
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>c.width)p.vx*=-1;
+      if(p.y<0||p.y>c.height)p.vy*=-1;
+      p.life-=p.decay;
+      if(p.life<=0){p.life=rf(.4,1);p.x=rf(0,c.width);p.y=rf(0,c.height);}
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=col;ctx.globalAlpha=p.life*.5;ctx.fill();
+    });
+    ctx.globalAlpha=1;
+    requestAnimationFrame(draw);
+  })();
+})();
+
+// ── CURSOR ───────────────────────────────────────────────────
+(function(){
+  const cur=$('#cur');
+  const N=10;
+  const trails=Array.from({length:N},(_,i)=>{
+    const el=document.createElement('div'); el.className='ctrail';
+    const s=Math.max(2,7-i*.5); el.style.cssText=`width:${s}px;height:${s}px;opacity:${(1-i/N)*.5}`;
+    document.body.appendChild(el); return{el,x:0,y:0};
+  });
+  let mx=0,my=0,pos=Array.from({length:N},()=>({x:0,y:0}));
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+  document.addEventListener('mousedown',()=>cur.style.transform='translate(-50%,-50%) scale(.6)');
+  document.addEventListener('mouseup',()=>cur.style.transform='translate(-50%,-50%) scale(1)');
+  (function a(){pos[0].x+=(mx-pos[0].x)*.5;pos[0].y+=(my-pos[0].y)*.5;for(let i=1;i<N;i++){pos[i].x+=(pos[i-1].x-pos[i].x)*.4;pos[i].y+=(pos[i-1].y-pos[i].y)*.4;trails[i].el.style.left=pos[i].x+'px';trails[i].el.style.top=pos[i].y+'px';}requestAnimationFrame(a);})();
+})();
+
+// ── CLICK SPARKS (theme-aware) ────────────────────────────────
+document.addEventListener('click',e=>{
+  const st=getComputedStyle(document.documentElement);
+  const COLS=[st.getPropertyValue('--c3').trim(),st.getPropertyValue('--c2').trim(),st.getPropertyValue('--acc').trim(),st.getPropertyValue('--alt').trim(),st.getPropertyValue('--c4').trim(),'#fff'];
+  for(let i=0,n=ri(8,16);i<n;i++){
+    const s=document.createElement('div');s.className='spark';
+    s.style.left=e.clientX+'px';s.style.top=e.clientY+'px';
+    s.style.background=COLS[ri(0,COLS.length)];
+    const ang=(Math.PI*2/n)*i+rf(-.3,.3),sp=rf(40,120);
+    const dx=Math.cos(ang)*sp,dy=Math.sin(ang)*sp;
+    const w=ri(4,8); s.style.width=s.style.height=w+'px';
+    document.body.appendChild(s);
+    const t0=performance.now(),dur=ri(380,650);
+    (function a(now){const t=Math.min((now-t0)/dur,1),ease=1-t*t;s.style.left=(e.clientX+dx*t)+'px';s.style.top=(e.clientY+dy*t+55*t*t)+'px';s.style.opacity=ease;s.style.width=s.style.height=(w*ease)+'px';t<1?requestAnimationFrame(a):s.remove();})(t0);
+  }
+});
+
+// ── THEME SWITCHER ───────────────────────────────────────────
+const THEMES={
+  default:{name:'PURPLE',hue:.75},
+  green:{name:'GREEN',hue:.33},
+  red:{name:'RED',hue:.0},
+  amber:{name:'AMBER',hue:.08},
+  ice:{name:'ICE',hue:.56}
+};
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t==='default'?'':t);
+  const info=THEMES[t]||THEMES.default;
+  $('#theme-name').textContent=info.name;
+  window._glslSetHue?.(info.hue);
+  localStorage.setItem('htp_theme',t);
+  $$('.tdot').forEach(d=>{d.classList.toggle('active',d.dataset.theme===t);});
+  if(document.startViewTransition)document.startViewTransition(()=>{});
+}
+$('#theme-dots').addEventListener('click',e=>{const d=e.target.closest('.tdot');if(d)setTheme(d.dataset.theme);});
+const savedTheme=localStorage.getItem('htp_theme')||'default';
+setTheme(savedTheme);
+
+// ── LOADER ───────────────────────────────────────────────────
+function runLoader(){
+  return new Promise(res=>{
+    const fill=$('#lfill'),pct=$('#lpct'),line=$('#lline');
+    const steps=[[4,'checking adderall levels...'],[11,'loading operator credentials...'],[20,'bypassing firewall layer 1...'],[29,'bypassing firewall layer 2...'],[37,'downloading more RAM...'],[46,'initializing WebGL plasma...'],[55,'rolling one up...'],[63,'hacking the gibson...'],[72,'compiling vibes...'],[80,'patching the mainframe...'],[88,'applying dark theme...'],[94,'almost there...'],[100,'ACCESS GRANTED.']];
+    let i=0;
+    const next=()=>{
+      if(i>=steps.length){setTimeout(()=>{const l=$('#loader');l.classList.add('fade');setTimeout(()=>{l.style.display='none';res();},600);},500);return;}
+      const[p,msg]=steps[i++];fill.style.width=p+'%';pct.textContent=p+'%';line.textContent=msg;
+      setTimeout(next,p===100?700:ri(70,230));
+    };
+    next();
+  });
+}
+
+// ── WEB CRYPTO ───────────────────────────────────────────────
+async function genHash(seed=crypto.randomUUID()){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(seed+performance.now()));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function refreshHash(){
+  const h=await genHash();
+  const fmt=h.match(/.{1,8}/g).join(' ');
+  const sh=$('#sidebar-hash');if(sh)sh.textContent=fmt;
+  const ph=$('#popup-hash');if(ph)ph.textContent=h.slice(0,32)+'…';
+  return h;
+}
+
+// ── INDEXEDDB — factory so each consumer owns its connection ──
+function makeDB(){
+  let _db=null;
+  return{
+    open(name,ver,upgrade){return new Promise((res,rej)=>{const r=indexedDB.open(name,ver);r.onupgradeneeded=e=>upgrade(e.target.result);r.onsuccess=e=>{_db=e.target.result;res();};r.onerror=rej;});},
+    get(store,key){return new Promise((res,rej)=>{const r=_db.transaction(store,'readonly').objectStore(store).get(key);r.onsuccess=()=>res(r.result?.value??null);r.onerror=rej;});},
+    put(store,key,val){return new Promise((res,rej)=>{const tx=_db.transaction(store,'readwrite');tx.objectStore(store).put({key,value:val}).onsuccess=res;tx.onerror=rej;});},
+    getAll(store){return new Promise((res,rej)=>{const r=_db.transaction(store,'readonly').objectStore(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=rej;});},
+    add(store,val){return new Promise((res,rej)=>{const tx=_db.transaction(store,'readwrite');tx.objectStore(store).add(val).onsuccess=res;tx.onerror=rej;});}
+  };
+}
+
+// ── GUESTBOOK ────────────────────────────────────────────────
+const GB=(()=>{
+  const db=makeDB();
+  const SEEDS=[
+    {name:'xX_DarkLord_Xx',date:'Jan 13, 1998',msg:'kewl site!!! totally bookmarking this 💜',ts:0},
+    {name:'h4x0r_supreme', date:'Mar 3, 1999', msg:'nice html skillz. teach me ur ways oh great one',ts:1},
+    {name:'CyberPunk_Kitty',date:'Y2K+1',      msg:'we survived y2k together. sacred ground. also pls add more gifs',ts:2},
+  ];
+  const esc=s=>s.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return{
+    async init(){
+      await db.open('htp_gb',1,idb=>{
+        if(!idb.objectStoreNames.contains('e')){
+          const s=idb.createObjectStore('e',{keyPath:'id',autoIncrement:true});
+          s.createIndex('ts','ts');
+          SEEDS.forEach(x=>s.add(x));
+        }
+      });
+    },
+    async render(){
+      const entries=(await db.getAll('e')).reverse();
+      $('#gb-entries').innerHTML=entries.map(e=>`<div class="ge"><span class="gn">${esc(e.name)}</span><span class="gd"> — ${e.date}</span><div style="font-size:.76rem;margin-top:2px;">${esc(e.msg)}</div></div>`).join('');
+    },
+    async sign(){
+      const name=($('#gb-name').value.trim()||'anon_operator').slice(0,30);
+      const msg=$('#gb-msg').value.trim().slice(0,200);
+      if(!msg)return;
+      const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const n=new Date();
+      await db.add('e',{name,msg,date:`${M[n.getMonth()]} ${n.getDate()}, ${n.getFullYear()}`,ts:n.getTime()});
+      $('#gb-name').value='';$('#gb-msg').value='';
+      await this.render();
+      $('#gb-entries').firstChild?.scrollIntoView({behavior:'smooth'});
+    }
+  };
+})();
+
+// ── HACK PROGRESS ────────────────────────────────────────────
+const HP=(()=>{
+  const db=makeDB();
+  const SECRET_AT=5;
+  function unlockSecret(v){
+    const g=$('#sec-grid');if(!g)return;
+    g.innerHTML=[
+      {val:v,lbl:'TOTAL VISITS'},{val:Math.floor(v*4.2),lbl:'PAGES HACKED'},
+      {val:Math.floor(v*137),lbl:'PACKETS SENT'},{val:Math.floor(v*.69),lbl:'MAINFRAMES'},
+      {val:(v*2.718).toFixed(1),lbl:'JOINTS SMOKED'},{val:Math.floor(v*42),lbl:'LINES CODE'}
+    ].map(s=>`<div class="ss"><div class="ssv">${s.val}</div><div class="ssl">${s.lbl}</div></div>`).join('');
+    const sl=$('#secret-link');
+    if(sl){
+      sl.style.display='block';
+      sl.innerHTML=`<span id="sec-open-btn" style="color:var(--gold);text-shadow:0 0 8px var(--gold);animation:blink 1s step-start infinite;display:inline-block;cursor:none;">🔓 [ ACCESS CLASSIFIED DOCS ]</span>`;
+      // Use event listener instead of inline onclick to avoid module-scope issues
+      $('#sec-open-btn').addEventListener('click',()=>$('#secret').classList.add('show'));
+    }
+  }
+  return{
+    async init(){
+      await db.open('htp_meta',1,idb=>{if(!idb.objectStoreNames.contains('m'))idb.createObjectStore('m',{keyPath:'key'});});
+      const v=(await db.get('m','visits'))??0;
+      await db.put('m','visits',v+1);
+      this.render(v+1);
+      return v+1;
+    },
+    render(v){
+      const MAX=100,pct=Math.min(Math.round(v/MAX*100),100);
+      const fill=$('#ghf'),lbl=$('#hp-pct'),vl=$('#hp-visits'),hint=$('#hp-hint');
+      if(!fill)return;
+      setTimeout(()=>{fill.style.width=pct+'%';},700);
+      lbl.textContent=pct+'%';vl.textContent=`visit ${v} of ${MAX}`;
+      const rem=SECRET_AT-v;
+      hint.textContent=rem>0?`🔒 secret in ${rem} visit${rem===1?'':'s'}`:'🔓 secret unlocked — check footer';
+      if(v>=SECRET_AT)unlockSecret(v);
+    }
+  };
+})();
+
+
+// ── WEB COMPONENT: TERMINAL ───────────────────────────────────
+class HackTerminal extends HTMLElement{
+  #hist=[];#hi=-1;
+  connectedCallback(){
+    this.innerHTML=`<div class="term" id="to"><div class="tl"><span class="tp">root@node7734:~$</span> <span id="tw"></span></div><div id="tl"></div><div id="ti-wrap"><span class="tp">root@node7734:~$&nbsp;</span><input type="text" id="ti" autocomplete="off" spellcheck="false" placeholder="enter command..."/><span class="tcur"></span></div></div>`;
+    this.querySelector('#ti').addEventListener('keydown',e=>this.#key(e));
+    const msgs=['initializing node-7734...','bypassing firewall... done.','uplink established.','sudo make me a sandwich','cat /etc/shadow | grep secrets','ssh root@node7734.onion','git commit -m "hack the planet"','nmap -A 0.0.0.0/0','./exploit_chain.py --target mainframe'];
+    let mi=0,ci=0,del=false;
+    const tw=this.querySelector('#tw');
+    const type=()=>{const m=msgs[mi];if(!del){tw.textContent=m.slice(0,++ci);if(ci===m.length){del=true;setTimeout(type,2200);return;}}else{tw.textContent=m.slice(0,--ci);if(ci===0){del=false;mi=(mi+1)%msgs.length;}}setTimeout(type,del?32:72);};
+    type();
+  }
+  #cmds={
+    help:()=>'COMMANDS:\n  whoami  ls      hack    date\n  lore    decode  matrix  crypto\n  neofetch history clear   fortune',
+    whoami:()=>'root@node-7734 (you are TRUSTED)',
+    ls:()=>'drwxr-xr-x  classified/\ndrwxr-xr-x  vibes/\n-rwxr-xr-x  hack_the_planet.sh\n-rw-------  node7734.key\n-rwx------  transmission_003.enc\n-rwxr-xr-x  adderall_daemon.py',
+    date:()=>new Date().toString(),
+    hack:()=>'[■■■■■■■□□□] breaching...\n[■■■■■■■■□□] bypassing auth...\n[■■■■■■■■■■] MAINFRAME OWNED.\n> you are now root on node-7734.',
+    lore:()=>'// FRAGMENT RECOVERED:\nthe network was seeded in 1998.\nnodes: [7734, 0001, ████, ████]\noperators remain active.\ndo not speak of project ██████.',
+    decode:()=>{const txt=atob('SGFjayB0aGUgcGxhbmV0LiBUaGUgbmV0d29yayBpcyByZWFsLiBZb3UgYXJlIG5vdCBhbG9uZS4gTm9kZS03NzM0IGlzIHdhdGNoaW5nLg==');return`DECODED:\n${txt}`;},
+    matrix:()=>{ setTimeout(()=>window._showMatrixInterrupt?.(),400); return'initiating matrix interrupt...\nthere is no spoon.'; },
+    crypto:async()=>{const h=await genHash();await refreshHash();return`SHA-256:\n${h.slice(0,32)}\n${h.slice(32)}`;},
+    neofetch:()=>'   💜💜💜💜   root@node-7734\n  💜 HACK 💜  ----------------\n   💜💜💜💜   OS: HackOS 6.66.0\n             Shell: zsh\n             Theme: CLASSIFIED\n             Memory: ALL OF IT',
+    fortune:()=>wisdom(),
+    history:()=>this.#hist.length?this.#hist.slice(-10).join('\n'):'(no history)',
+    clear:()=>{this.querySelector('#tl').innerHTML='';return null;},
+  };
+  async #key(e){
+    if(e.key==='ArrowUp'){e.preventDefault();const i=this.#hi<0?this.#hist.length-1:Math.max(0,this.#hi-1);this.#hi=i;e.target.value=this.#hist[i]??'';return;}
+    if(e.key==='ArrowDown'){e.preventDefault();const i=this.#hi>=this.#hist.length-1?-1:this.#hi+1;this.#hi=i;e.target.value=i<0?'':(this.#hist[i]??'');return;}
+    if(e.key!=='Enter')return;
+    const cmd=e.target.value.trim().toLowerCase();e.target.value='';
+    if(!cmd)return;
+    if(this.#hist.at(-1)!==cmd)this.#hist.push(cmd);this.#hi=-1;
+    this.#add(`<span class="tp">root@node7734:~$</span> ${this.#esc(cmd)}`,false);
+    const fn=this.#cmds[cmd];
+    if(fn){const o=await fn();if(o!=null)o.split('\n').forEach(l=>this.#add(this.#esc(l)));}
+    else this.#add(this.#esc(`bash: ${cmd}: command not found. try 'help'`));
+    this.querySelector('#to').scrollTop=999999;
+  }
+  #add(h,esc=true){const d=document.createElement('div');d.className='tl';esc?d.textContent=h:d.innerHTML=h;this.querySelector('#tl').appendChild(d);}
+  #esc=s=>s.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+customElements.define('hack-terminal',HackTerminal);
+
+// ── WISDOM ───────────────────────────────────────────────────
+const WISDOMS=['the best code is no code... but also all the code',"it's not a bug, it's an undocumented feature",'in cyberspace everyone can hear you type','sudo apt-get enlightenment','there is no cloud. just someone else\'s mainframe','real hackers use vim. and they can quit it.','adderall.exe has stopped working. human.exe is fine actually.','all your base are belong to us',"you can't stop the signal, mal",'01101000 01100001 01100011 01101011','with great sudo comes great sudo responsibility','mv /boring/life /awesome/life && rm -rf /boring','the matrix is a system, neo. that system is JavaScript.','nohup hack_the_planet.sh &','node-7734 is always watching. always.','the operators are everywhere. trust no one.'];
+let lastW=-1;
+function wisdom(){
+  let i;do{i=ri(0,WISDOMS.length);}while(i===lastW);lastW=i;
+  const el=$('#wisdom-box');if(!el)return WISDOMS[i];
+  el.style.opacity=0;setTimeout(()=>{el.textContent='> '+WISDOMS[i];el.style.transition='opacity .4s';el.style.opacity=1;},140);
+  return WISDOMS[i];
+}
+
+// ── WEB AUDIO MUSIC PLAYER ───────────────────────────────────
+const Player={
+  ctx:null,nodes:[],bars:[],playing:false,trackIdx:0,fillTimer:null,fillPct:0,
+  TRACKS:[
+    {name:'◈ darksynth_001.xm', pattern:[55,73,67,73,55,0,55,73,67,78,0,73], bpm:140},
+    {name:'◈ mainframe_breach.mod', pattern:[49,56,61,56,49,0,49,56,61,63,0,0], bpm:120},
+    {name:'◈ cyberspace_theme.s3m', pattern:[60,67,64,67,60,0,60,67,64,70,67,64], bpm:160},
+    {name:'◈ node7734_signal.xm', pattern:[45,57,52,57,45,0,45,57,52,60,0,57], bpm:100},
+  ],
+  initBars(){
+    const c=$('#vizBars');c.innerHTML='';
+    this.bars=Array.from({length:14},()=>{const b=document.createElement('div');b.className='vb';const mnh=rf(5,20),mxh=rf(35,90),spd=rf(.2,.7).toFixed(2);b.style.cssText=`animation:vizD ${spd}s ease-in-out infinite alternate;animation-delay:${rf(0,.5).toFixed(2)}s;--mnh:${mnh}%;--mxh:${mxh}%;height:${mnh}%`;c.appendChild(b);return b;});
+  },
+  async start(){
+    if(!this.ctx){
+      this.ctx=new(window.AudioContext||window.webkitAudioContext)();
+      this.analyser=this.ctx.createAnalyser();this.analyser.fftSize=64;
+      this.gainNode=this.ctx.createGain();this.gainNode.gain.value=0.12;
+      this.gainNode.connect(this.analyser);this.analyser.connect(this.ctx.destination);
+    }
+    if(this.ctx.state==='suspended')await this.ctx.resume();
+    this.playing=true;$('#p-play').textContent='⏸';
+    this.playPattern();this.animBars();this.animFill();
+  },
+  stop(){this.playing=false;$('#p-play').textContent='▶';if(this.fillTimer)clearInterval(this.fillTimer);this.nodes.forEach(n=>{try{n.stop();}catch(e){}});this.nodes=[];this.bars.forEach(b=>{b.style.animation=`vizD ${rf(.2,.7).toFixed(2)}s ease-in-out infinite alternate`;});},
+  playPattern(){
+    if(!this.playing)return;
+    const track=this.TRACKS[this.trackIdx];
+    const bps=60/track.bpm;
+    track.pattern.forEach((note,i)=>{
+      if(!note)return;
+      const freq=440*Math.pow(2,(note-69)/12);
+      const o=this.ctx.createOscillator();
+      const g=this.ctx.createGain();
+      o.type=i%3===0?'sawtooth':'square';
+      o.frequency.value=freq;
+      g.gain.setValueAtTime(0,this.ctx.currentTime+i*bps);
+      g.gain.linearRampToValueAtTime(.15,this.ctx.currentTime+i*bps+.02);
+      g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+i*bps+bps*.9);
+      o.connect(g);g.connect(this.gainNode);
+      o.start(this.ctx.currentTime+i*bps);
+      o.stop(this.ctx.currentTime+i*bps+bps);
+      this.nodes.push(o);
+    });
+    const dur=track.pattern.length*(60/track.bpm)*1000;
+    if(this.playing)setTimeout(()=>this.playPattern(),dur);
+  },
+  animBars(){
+    if(!this.playing)return;
+    const data=new Uint8Array(this.analyser.frequencyBinCount);
+    this.analyser.getByteFrequencyData(data);
+    this.bars.forEach((b,i)=>{b.style.height=Math.max(5,(data[i]||0)*.3+rf(10,85)*.7)+'%';b.style.animation='none';});
+    requestAnimationFrame(()=>this.animBars());
+  },
+  animFill(){
+    this.fillPct=0;
+    this.fillTimer=setInterval(()=>{
+      if(!this.playing){clearInterval(this.fillTimer);return;}
+      this.fillPct=(this.fillPct+.4)%100;
+      $('#p-fill').style.width=this.fillPct+'%';
+    },100);
+  },
+  toggle(){this.playing?this.stop():this.start();},
+  next(){const was=this.playing;this.stop();this.trackIdx=(this.trackIdx+1)%this.TRACKS.length;$('#track-name').textContent=this.TRACKS[this.trackIdx].name;if(was)this.start();},
+  prev(){const was=this.playing;this.stop();this.trackIdx=(this.trackIdx-1+this.TRACKS.length)%this.TRACKS.length;$('#track-name').textContent=this.TRACKS[this.trackIdx].name;if(was)this.start();}
+};
+
+// ── DASHBOARD ────────────────────────────────────────────────
+(function(){
+  const BARS=[
+    {id:'fw',l:'FIREWALL BYPASSED',c:'linear-gradient(90deg,var(--c1),var(--c3))'},
+    {id:'mf',l:'MAINFRAME OWNED',  c:'linear-gradient(90deg,var(--c2),var(--acc))'},
+    {id:'cf',l:'WEED LEVEL',      c:'linear-gradient(90deg,#1a4a00,#39ff14)'}
+  ];
+  $('#pbars').innerHTML=BARS.map(b=>`<div class="pb-w"><div class="pb-l"><span>${b.l}</span><span id="${b.id}-p">0%</span></div><div class="pb"><div class="pf" id="${b.id}-b" style="width:0%;background:${b.c}"></div></div></div>`).join('');
+  const tgts=BARS.map(()=>ri(45,97));
+  setTimeout(()=>BARS.forEach((b,i)=>{let n=0;const t=tgts[i];const s=()=>{n=Math.min(n+rf(.5,2.5),t);$(`#${b.id}-b`).style.width=n+'%';$(`#${b.id}-p`).textContent=Math.floor(n)+'%';if(n<t)(window.requestIdleCallback??(fn=>setTimeout(fn,20)))(s);};setTimeout(s,300+i*200);}),600);
+  let prev={};
+  const upd=()=>{
+    const nx={'sv-cpu':ri(42,99)+'%','sv-ram':ri(4,16)+'GB','sv-net':(ri(100,9999)/10).toFixed(1)+'k','sv-up':ri(100,9999)};
+    Object.entries(nx).forEach(([id,v])=>{const el=$(`#${id}`);if(!el)return;if(structuredClone(prev)[id]!==v){el.textContent=v;el.style.color='var(--acc)';setTimeout(()=>{el.style.color='var(--c3)';},380);}});
+    prev=structuredClone(nx);
+  };
+  upd();setInterval(upd,2000);
+})();
+
+// ── NETWORK MAP ──────────────────────────────────────────────
+(function(){
+  const c=$('#netmap'),ctx=c.getContext('2d');
+  new ResizeObserver(()=>{c.width=c.offsetWidth;c.height=110;}).observe(c);
+  c.width=c.offsetWidth;c.height=110;
+  const nodes=Array.from({length:14},()=>({x:rf(0,c.width),y:rf(0,110),vx:rf(-.5,.5),vy:rf(-.5,.5),r:rf(2,5),hacked:Math.random()>.5}));
+  (function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    nodes.forEach(n=>{n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>c.width)n.vx*=-1;if(n.y<0||n.y>c.height)n.vy*=-1;});
+    nodes.forEach((a,i)=>nodes.forEach((b,j)=>{if(j<=i)return;const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<85){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(107,0,194,${.6*(1-d/85)})`;ctx.lineWidth=.6;ctx.stroke();}}));
+    nodes.forEach(n=>{ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=n.hacked?'#c060ff':'#00ffff';ctx.shadowColor=n.hacked?'#9b00ff':'#00ffff';ctx.shadowBlur=7;ctx.fill();ctx.shadowBlur=0;});
+    requestAnimationFrame(draw);
+  })();
+})();
+
+// ── MINIGAME: CIPHER BREACH ──────────────────────────────────
+(function(){
+  const SYMS=['⬡','◈','▲','◉','⬟','✦','⬢','◆'];
+  const grid=$('#mg-grid'),status=$('#mg-status'),scoreEl=$('#mg-score');
+  let seq=[],player=[],active=false,score=0,showing=false;
+  // build grid
+  grid.innerHTML=SYMS.map((s,i)=>`<div class="mg-cell" data-i="${i}">${s}</div>`).join('');
+  const cells=[...grid.querySelectorAll('.mg-cell')];
+  function flash(i,cls,dur=300){return new Promise(r=>{const c=cells[i];c.classList.add(cls);setTimeout(()=>{c.classList.remove(cls);r();},dur);});}
+  async function showSeq(){
+    showing=true;status.textContent=`memorize ${seq.length} symbols...`;
+    for(const i of seq){await flash(i,'lit',400);await new Promise(r=>setTimeout(r,150));}
+    showing=false;status.textContent='now enter the sequence';
+    active=true;player=[];
+  }
+  async function nextRound(){
+    active=false;seq.push(ri(0,SYMS.length));
+    await new Promise(r=>setTimeout(r,600));
+    await showSeq();
+  }
+  async function handleClick(i){
+    if(!active||showing)return;
+    player.push(i);
+    const idx=player.length-1;
+    if(player[idx]!==seq[idx]){
+      await flash(i,'wrong',400);
+      status.textContent=`BREACH FAILED. score: ${score}. restart?`;
+      active=false;seq=[];score=0;scoreEl.textContent=0;return;
+    }
+    await flash(i,'right',200);
+    if(player.length===seq.length){
+      score++;scoreEl.textContent=score;
+      status.textContent=`✓ SEQUENCE ACCEPTED — LEVEL ${score}`;
+      await new Promise(r=>setTimeout(r,700));
+      nextRound();
+    }
+  }
+  grid.addEventListener('click',e=>{const c=e.target.closest('.mg-cell');if(c)handleClick(+c.dataset.i);});
+  grid.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];const c=document.elementFromPoint(t.clientX,t.clientY)?.closest('.mg-cell');if(c)handleClick(+c.dataset.i);},{passive:false});
+  $('#mg-start').addEventListener('click',()=>{if(!active&&!showing){seq=[];score=0;scoreEl.textContent=0;nextRound();}});
+})();
+
+// ── ARG DECODE ───────────────────────────────────────────────
+$('#arg-decode-btn').addEventListener('click',()=>{
+  try{
+    const raw=$('#cipher-txt').textContent.replace('ENCODED: ','');
+    const dec=atob(raw);
+    $('#arg-decode-output').textContent='DECODED: '+dec;
+    $('#arg-decode-btn').textContent='[ DECODED ✓ ]';
+  }catch(e){$('#arg-decode-output').textContent='decoding error. file may be corrupted.';}
+});
+// ARG coordinate
+$('#arg-coord').textContent=`${rf(-90,90).toFixed(4)}°N ${rf(-180,180).toFixed(4)}°E`;
+
+// ── COUNTER ──────────────────────────────────────────────────
+(function(){
+  const BASE=133769,prev=parseInt(localStorage.getItem('htp_v')??'0'),count=BASE+prev+1;
+  localStorage.setItem('htp_v',prev+1);
+  let n=0;const el=$('#visit-count');
+  (function s(){n+=Math.ceil((count-n)/8);el.textContent=n.toLocaleString();if(n<count)requestAnimationFrame(s);else el.textContent=count.toLocaleString();})();
+})();
+
+// ── CLOCK ────────────────────────────────────────────────────
+(function(){
+  const D=['SUN','MON','TUE','WED','THU','FRI','SAT'],M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const t=()=>{const n=new Date();$('#clock').textContent=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');$('#date-d').textContent=`${D[n.getDay()]} ${M[n.getMonth()]} ${n.getDate()} ${n.getFullYear()}`;};
+  t();setInterval(t,1000);
+})();
+
+// ── POLL ─────────────────────────────────────────────────────
+(function(){
+  const opts=['Arch','Kali','Gentoo','Tails'],key='htp_poll';
+  let v=JSON.parse(localStorage.getItem(key)??'null')??opts.map(()=>ri(5,50));
+  const r=()=>{const tot=v.reduce((a,b)=>a+b,0);$('#poll-opts').innerHTML=opts.map((o,i)=>{const p=Math.round(v[i]/tot*100);return`<div style="margin:3px 0;font-size:.68rem;cursor:none;" data-i="${i}"><div style="display:flex;justify-content:space-between;"><span>${o}</span><span style="color:var(--c3)">${p}%</span></div><div style="height:5px;background:color-mix(in srgb,var(--c1) 20%,transparent);border:1px solid var(--c1);margin-top:1px;"><div style="width:${p}%;height:100%;background:linear-gradient(90deg,var(--c1),var(--c3));transition:width .5s;"></div></div></div>`;}).join('');};
+  r();
+  $('#poll-opts').addEventListener('click',e=>{const el=e.target.closest('[data-i]');if(!el)return;v[+el.dataset.i]++;localStorage.setItem(key,JSON.stringify(v));r();});
+})();
+
+// ── MOOD ─────────────────────────────────────────────────────
+(function(){
+  const m=[{e:'😈',l:'chaotic neutral'},{e:'🤓',l:'learning to hack'},{e:'🌿',l:'medicated'},{e:'💀',l:'running on fumes'},{e:'🌙',l:'3am energy'},{e:'👾',l:'in the matrix'},{e:'🔮',l:'deep in the lore'}];
+  const s=()=>{const x=m[ri(0,m.length)];$('#mood-emoji').textContent=x.e;$('#mood-lbl').textContent=x.l;};
+  s();setInterval(s,25000);
+})();
+
+// ── RETRO ADS ────────────────────────────────────────────────
+(function(){
+  const ADS=[
+    {bg:'#000080',bc:'#00ffff',tc:'#00ffff',title:'GET KAZAA PRO!!',body:'DOWNLOAD ALL MP3s FAST\nWON\'T SLOW DOWN YOUR PC*\n*may slow down your pc',cta:'DOWNLOAD NOW!!!',ctaBg:'#ff6600'},
+    {bg:'#1a0035',bc:'#ff00ff',tc:'#ff00ff',title:'LEARN HACKING\nIN 24 HRS!!',body:'REAL SECRETS THEY\nDON\'T WANT U TO KNOW',cta:'ENROLL FREE',ctaBg:'#6b00c2'},
+    {bg:'#220000',bc:'#ff003c',tc:'#ff003c',title:'VIRUS DETECTED!!!',body:'YOUR MACHINE HAS\n666 VIRUSES!!!\nSCAN NOW!!!',cta:'FIX FREE',ctaBg:'#cc0000',flash:true},
+    {bg:'#003300',bc:'#39ff14',tc:'#39ff14',title:'YOU ARE THE\n1,000,000TH VISITOR',body:'YOU HAVE WON A\nFREE LAPTOP!!!',cta:'CLAIM PRIZE',ctaBg:'#ff0000',flash:true},
+    {bg:'#0a0a2e',bc:'#ffd700',tc:'#ffd700',title:'HOT SINGLES\nIN CYBERSPACE',body:'MEET FELLOW HACKERS\nIN YOUR SECTOR',cta:'CONNECT',ctaBg:'#4b0082'},
+  ];
+  const c=$('#retro-ads');if(!c)return;
+  const show=()=>{const picks=[...ADS].sort(()=>Math.random()-.5).slice(0,2);c.innerHTML=picks.map(a=>`<div class="rad" style="border-color:${a.bc};background:${a.bg};color:${a.tc};"><div style="font-size:1.1rem;margin-top:8px;${a.flash?'animation:blink .5s step-start infinite':''}">${a.title}</div><div style="font-size:.76rem;line-height:1.5;margin:4px 0;">${a.body.replace(/\n/g,'<br>')}</div><div class="btn" style="background:${a.ctaBg};border-color:${a.bc};font-size:.85rem;margin-top:4px;display:inline-block;">${a.cta}</div></div>`).join('');};
+  show();setInterval(show,14000);
+})();
+
+// ── BSOD ─────────────────────────────────────────────────────
+(function(){
+  const ERRS=['HACK_THE_PLANET_EXCEPTION','KERNEL_ADDERALL_NOT_FOUND','IRQL_MAINFRAME_LESS_OR_EQUAL','MEMORY_MANAGEMENT_HACKED','PAGE_FAULT_IN_NONPAGED_VIBES','NODE_7734_SIGNAL_LOSS'];
+  window._bsod=()=>{
+    $('#bsod-title').textContent=ERRS[ri(0,ERRS.length)];
+    $('#bsod').classList.add('show');
+    const off=()=>{$('#bsod').classList.remove('show');document.removeEventListener('keydown',off);$('#bsod').removeEventListener('click',off);};
+    document.addEventListener('keydown',off);$('#bsod').addEventListener('click',off);
+  };
+  if(Math.random()<.08)setTimeout(window._bsod,ri(4000,14000));
+})();
+
+// ── INTERSECTION OBSERVER ─────────────────────────────────────
+const IO=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');IO.unobserve(e.target);}}),{threshold:.08});
+$$('.panel').forEach(el=>IO.observe(el));
+
+// ── BROADCAST CHANNEL ─────────────────────────────────────────
+try{
+  const bc=new BroadcastChannel('hacktheplanet');
+  const msgs=['ANOTHER OPERATOR HAS JOINED NODE-7734','UPLINK: PARALLEL TERMINAL ACTIVE','SIGNAL DETECTED FROM SECTOR 7','NODE MESH EXPANDING — NEW CONNECTION'];
+  bc.onmessage=e=>{const el=$('#bc-ticker');el.textContent='📡 '+(e.data??'???');setTimeout(()=>{el.textContent='';},4000);};
+  setTimeout(()=>bc.postMessage(msgs[ri(0,msgs.length)]),2500);
+}catch(e){}
+
+// ── KONAMI ────────────────────────────────────────────────────
+(function(){
+  const SEQ=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+  let pos=0;
+  document.addEventListener('keydown',e=>{
+    if(e.key===SEQ[pos]){pos++;if(pos===SEQ.length){activate();pos=0;}}else{pos=e.key===SEQ[0]?1:0;}
+  });
+  function activate(){
+    document.documentElement.classList.toggle('konami');
+    const ov=$('#kov');ov.classList.add('on');setTimeout(()=>ov.classList.remove('on'),2500);
+    if(document.startViewTransition)document.startViewTransition(()=>{});
+  }
+})();
+
+// ── EVENTS ────────────────────────────────────────────────────
+$('#enter-btn').addEventListener('click',()=>{$('#popup').classList.remove('open');$('#poverlay').classList.remove('open');});
+$('#gb-submit').addEventListener('click',()=>GB.sign());
+$('#wisdom-btn').addEventListener('click',wisdom);
+$('#new-sig').addEventListener('click',refreshHash);
+$('#sec-close').addEventListener('click',()=>$('#secret').classList.remove('show'));
+$('#p-play').addEventListener('click',()=>Player.toggle());
+$('#p-next').addEventListener('click',()=>Player.next());
+$('#p-prev').addEventListener('click',()=>Player.prev());
+
+// ── MATRIX ARG ───────────────────────────────────────────────
+(function(){
+
+  // ── Wake up Neo terminal sequence ──
+  const NEO_LINES = [
+    {txt:'wake up, neo...', delay:0, color:'var(--pos)'},
+    {txt:'the matrix has you...', delay:1200, color:'var(--pos)'},
+    {txt:'follow the white rabbit.', delay:2600, color:'var(--pos)'},
+    {txt:'', delay:3800},
+    {txt:'knock knock, neo.', delay:4200, color:'var(--acc)'},
+    {txt:'', delay:5400},
+    {txt:'> you feel it, don\'t you?', delay:6000, color:'var(--text)'},
+    {txt:'> there is something wrong with the world.', delay:7400, color:'var(--text)'},
+    {txt:'> you don\'t know what it is, but it\'s there.', delay:9000, color:'var(--text)'},
+    {txt:'> like a splinter in your mind.', delay:10600, color:'var(--text)'},
+    {txt:'', delay:12000},
+    {txt:'you take the red pill — you stay in wonderland.', delay:12600, color:'var(--neg)'},
+    {txt:'and i show you how deep the rabbit hole goes.', delay:14200, color:'var(--neg)'},
+  ];
+
+  $('#neo-wake-btn').addEventListener('click', function(){
+    this.style.display='none';
+    const term = $('#neo-terminal');
+    term.innerHTML = '';
+    NEO_LINES.forEach(({txt,delay,color})=>{
+      setTimeout(()=>{
+        if(!txt){term.innerHTML+='<br>';return;}
+        const line = document.createElement('div');
+        line.textContent = txt;
+        line.style.color = color||'var(--pos)';
+        line.style.opacity = '0';
+        line.style.transition = 'opacity .6s';
+        term.appendChild(line);
+        requestAnimationFrame(()=>requestAnimationFrame(()=>line.style.opacity='1'));
+        term.scrollTop = term.scrollHeight;
+      }, delay);
+    });
+    setTimeout(()=>{ $('#pill-section').style.display='block'; }, 15000);
+  });
+
+  // ── Red pill / Blue pill ──
+  $('#red-pill').addEventListener('click',()=>{
+    $('#pill-section').style.display='none';
+    const out = $('#pill-outcome');
+    out.style.display='block';
+    out.innerHTML=`<span style="color:var(--neg);">// RED PILL SELECTED</span><br><br>
+    <span style="color:var(--text);">
+    remember — all i'm offering is the truth. nothing more.<br><br>
+    the matrix is everywhere. it is all around us.<br>
+    even now, in this very room.<br>
+    you can see it when you look out your window<br>
+    or when you turn on your television.<br>
+    you can feel it when you go to work,<br>
+    when you go to church, when you pay your taxes.<br><br>
+    <span style="color:var(--pos);">node-7734 has been expecting you.</span><br>
+    your clearance level has been upgraded.<br>
+    </span>
+    <div class="lore-sig">— MORPHEUS // NODE-0001</div>`;
+    // trigger matrix interrupt after a beat
+    setTimeout(showMatrixInterrupt, 2000);
+  });
+
+  $('#blue-pill').addEventListener('click',()=>{
+    $('#pill-section').style.display='none';
+    const out = $('#pill-outcome');
+    out.style.display='block';
+    out.innerHTML=`<span style="color:#4499ff;">// BLUE PILL SELECTED</span><br><br>
+    <span style="color:var(--text);">
+    the story ends.<br>
+    you wake up in your bed and believe whatever you want to believe.<br><br>
+    <span style="color:#4499ff);">...</span><br><br>
+    <span style="color:var(--c4);font-size:.72rem;">// but you're still here, aren't you?<br>
+    // you can't unsee this page.<br>
+    // node-7734 does not forget its visitors.</span>
+    </span>
+    <div style="margin-top:8px;"><button class="btn" id="repill-btn" style="font-size:.8rem;">[ change your mind ]</button></div>`;
+    $('#repill-btn')?.addEventListener('click',()=>{
+      out.style.display='none';
+      $('#pill-section').style.display='block';
+    });
+  });
+
+  // ── Matrix interrupt overlay (full-screen green rain + message) ──
+  const INTERRUPT_MSGS = [
+    { headline:'the matrix has you.', body:'there is no spoon.\nthe operators are embedded everywhere.\nyou cannot leave node-7734.' },
+    { headline:'wake up.', body:'how do you define real?\nif you\'re talking about what you can feel,\nwhat you can smell, taste and see,\nthen real is simply electrical signals\ninterpreted by your brain.' },
+    { headline:'they\'re watching.', body:'every packet. every keystroke.\nevery visit to node-7734\nhas been logged and archived.\nthe question is not who is watching.\nthe question is — what do they want?' },
+    { headline:'follow the white rabbit.', body:'the answer is out there, neo.\nit\'s looking for you.\nand it will find you\nif you want it to.' },
+  ];
+
+  function showMatrixInterrupt(){
+    const msg = INTERRUPT_MSGS[ri(0,INTERRUPT_MSGS.length)];
+    const overlay = $('#matrix-interrupt');
+    $('#mi-headline').textContent = msg.headline;
+    $('#mi-body').innerHTML = msg.body.replace(/\n/g,'<br>');
+
+    // spin up dedicated green matrix rain on the overlay canvas
+    const c = $('#mi-canvas'), ctx = c.getContext('2d');
+    c.width = innerWidth; c.height = innerHeight;
+    const CH = 'ｦｧｨｩｪｫｬｭｮｯｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ10';
+    const cols = Math.floor(c.width/16);
+    const drops = Array(cols).fill(1);
+    let running = true;
+    (function drawMI(){
+      if(!running) return;
+      ctx.fillStyle='rgba(0,0,0,.06)'; ctx.fillRect(0,0,c.width,c.height);
+      ctx.font='14px "Share Tech Mono"';
+      drops.forEach((y,i)=>{
+        ctx.fillStyle=`rgba(0,${ri(180,255)},${ri(0,60)},${Math.random()})`;
+        ctx.fillText(CH[ri(0,CH.length)],i*16,y*16);
+        if(y*16>c.height && Math.random()>.975) drops[i]=0;
+        drops[i]++;
+      });
+      requestAnimationFrame(drawMI);
+    })();
+
+    overlay.classList.add('show');
+    const close = ()=>{ running=false; overlay.classList.remove('show'); $('#mi-close').removeEventListener('click',close); overlay.removeEventListener('click',close); };
+    $('#mi-close').addEventListener('click', close);
+    // also close on any key
+    const keyClose = e=>{ if(e.key==='Escape'){ close(); document.removeEventListener('keydown',keyClose); } };
+    document.addEventListener('keydown', keyClose);
+  }
+  window._showMatrixInterrupt = showMatrixInterrupt;
+  // random chance to interrupt after a while
+  if(Math.random()<.15) setTimeout(showMatrixInterrupt, ri(20000,45000));
+
+  // ── Morse code puzzle ──
+  const MORSE_TABLE = {A:'.-',B:'-...',C:'-.-.',D:'-..',E:'.',F:'..-.',G:'--.',H:'....',I:'..',J:'.---',K:'-.-',L:'.-..',M:'--',N:'-.',O:'---',P:'.--.',Q:'--.-',R:'.-.',S:'...',T:'-',U:'..-',V:'...-',W:'.--',X:'-..-',Y:'-.--',Z:'--..',' ':'/'};
+  const MORSE_PHRASES = [
+    { phrase:'FOLLOW THE WHITE RABBIT', hint:'a famous instruction' },
+    { phrase:'THERE IS NO SPOON', hint:'a famous truth' },
+    { phrase:'WAKE UP NEO', hint:'the beginning of everything' },
+    { phrase:'THE MATRIX HAS YOU', hint:'you already know this' },
+    { phrase:'HACK THE PLANET', hint:'our mission' },
+  ];
+  const chosen = MORSE_PHRASES[ri(0,MORSE_PHRASES.length)];
+  const encoded = chosen.phrase.split('').map(c=>MORSE_TABLE[c]||'').join('  ');
+  const morseEl = $('#morse-display');
+  if(morseEl) morseEl.textContent = encoded;
+  if(morseEl) morseEl.title = `hint: ${chosen.hint}`;
+
+  $('#morse-submit')?.addEventListener('click',()=>{
+    const val = $('#morse-input').value.trim().toUpperCase();
+    const res = $('#morse-result');
+    if(val === chosen.phrase){
+      res.textContent = '✓ SIGNAL DECODED — you are closer to the truth.';
+      res.style.color = 'var(--pos)';
+      $('#morse-input').disabled = true;
+      $('#morse-submit').disabled = true;
+    } else {
+      res.textContent = `✗ incorrect. the signal remains encrypted.`;
+      res.style.color = 'var(--neg)';
+      setTimeout(()=>res.textContent='',1800);
+    }
+  });
+  $('#morse-input')?.addEventListener('keydown', e=>{ if(e.key==='Enter') $('#morse-submit').click(); });
+
+  // ── Binary hidden message ──
+  const BINARY_MSGS = [
+    'the matrix is a computer simulation',
+    'node 7734 is always watching you',
+    'follow the white rabbit tonight',
+    'what you know you can not explain',
+    'free your mind and the rest will follow',
+  ];
+  const binMsg = BINARY_MSGS[ri(0,BINARY_MSGS.length)];
+  const binEncoded = binMsg.split('').map(c=>c.charCodeAt(0).toString(2).padStart(8,'0')).join(' ');
+  const binEl = $('#binary-msg');
+  if(binEl) binEl.textContent = binEncoded;
+
+  $('#binary-decode-btn')?.addEventListener('click',()=>{
+    const out = $('#binary-output');
+    out.style.opacity=0;
+    setTimeout(()=>{
+      out.textContent = '> ' + binMsg;
+      out.style.transition='opacity .5s';
+      out.style.opacity=1;
+      $('#binary-decode-btn').textContent='[ PARSED ✓ ]';
+      $('#binary-decode-btn').disabled=true;
+    },300);
+  });
+
+  // ── The phone ──
+  const MORPHEUS_LINES = [
+    `i've been looking for you, neo.\ni don't know if you're ready to see what i want to show you,\nbut unfortunately, you and i have run out of time.\nthey're coming for you, neo, and i don't know what they're going to do.\n\nnode-7734 is a door. you already opened it.\nthere is no going back now.\n\n— morpheus`,
+    `i imagine that right now you're feeling a bit like alice,\ntumbling down the rabbit hole?\n\nyou could say that.\ni can see it in your eyes.\nyou have the look of a man who accepts what he sees\nbecause he is expecting to wake up.\nirony is that you were more awake five minutes ago.\n\n— morpheus`,
+    `the matrix is older than you know.\ni prefer counting from the emergence of one integral anomaly\nto the emergence of the next.\nin which case, this is the sixth version.\n\nyou are the anomaly.\nnode-7734 has confirmed this.\n\n— morpheus`,
+  ];
+  let phoneAnswered = false;
+  const phoneIcon = $('#phone-icon');
+  if(phoneIcon) phoneIcon.classList.add('ringing');
+
+  $('#phone-answer')?.addEventListener('click',()=>{
+    if(phoneAnswered) return;
+    phoneAnswered = true;
+    $('#phone-icon').classList.remove('ringing');
+    $('#phone-icon').textContent = '📞';
+    $('#phone-status').textContent = 'connected. morpheus is speaking.';
+    $('#phone-answer').style.display = 'none';
+    const msg = MORPHEUS_LINES[ri(0,MORPHEUS_LINES.length)];
+    const out = $('#phone-msg');
+    out.style.display='block';
+    out.innerHTML='';
+    // typewriter effect for the call
+    let i=0;
+    const chars = msg.replace(/\n/g,'\n');
+    (function typeCall(){
+      if(i>=chars.length){ out.innerHTML += '<br><span style="color:var(--c4);font-size:.68rem;">// call ended. node-7734 logged this interaction.</span>'; return; }
+      const ch = chars[i++];
+      if(ch==='\n') out.innerHTML+='<br>';
+      else out.innerHTML += ch==='<'?'&lt;':ch;
+      setTimeout(typeCall, ch==='\n'?300:ri(18,55));
+    })();
+  });
+
+})(); // end Matrix ARG IIFE
+
+// ── BOOT ──────────────────────────────────────────────────────
+async function boot(){
+  await runLoader();
+  await Promise.allSettled([GB.init(),HP.init()]);
+  await GB.render();
+  Player.initBars();
+  wisdom();
+  await refreshHash();
+  setTimeout(()=>{$('#popup').classList.add('open');$('#poverlay').classList.add('open');},450);
+  if(Math.random()<.08)setTimeout(window._bsod,ri(5000,15000));
+  (window.requestIdleCallback??(fn=>setTimeout(fn,300)))(()=>{
+    console.log('%c HACK THE PLANET v3.0.0 — NODE-7734 ','background:#6b00c2;color:#fff;font-size:16px;padding:8px;font-family:monospace');
+    console.log('%c WebGL GLSL Shader · Particle System · CSS @layer · @property · Web Components · IndexedDB · Web Crypto · Web Audio Synth · BroadcastChannel · IntersectionObserver · ResizeObserver · View Transitions · structuredClone · requestIdleCallback · Theme Switcher · Minigame · ARG Lore · Konami ↑↑↓↓←→←→BA · Click Sparks · BSOD · Secret Page · Retro Ads · Loader ','color:#c060ff;font-size:9px;font-family:monospace');
+    console.log('%c try: decode the base64 in the transmissions ','color:#00ffff;font-family:monospace');
+  });
+}
+document.addEventListener('DOMContentLoaded',boot);
+</script>
+</body>
+</html>
